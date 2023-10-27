@@ -38,7 +38,7 @@ projects.
 **Pro-tip**: After adding it to your project, reformat your entire codebase using the following command:
 
 ```bash
-   yarn prettier . --write
+yarn prettier . --write
 ```
 
 ## Release
