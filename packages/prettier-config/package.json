@@ -1,6 +1,6 @@
 {
   "name": "@aplinkosministerija/biip-prettier-config",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Shared Prettier configuration",
   "main": "index.json",
   "license": "MIT",
