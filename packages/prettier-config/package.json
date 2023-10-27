@@ -1,0 +1,29 @@
+{
+  "name": "@aplinkosministerija/biip-prettier-config",
+  "version": "0.0.1",
+  "description": "Shared Prettier configuration",
+  "main": "index.json",
+  "license": "MIT",
+  "homepage": "https://github.com/AplinkosMinisterija/biip-shared-configuration",
+  "sideEffects": false,
+  "author": {
+    "name": "Karolis Vyčius",
+    "email": "karolis@vycius.lt"
+  },
+  "keywords": [
+    "prettier"
+  ],
+  "bugs": {
+    "url": "https://github.com/AplinkosMinisterija/biip-shared-configuration/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AplinkosMinisterija/biip-shared-configuration.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "engines": {
+    "node": "*"
+  }
+}

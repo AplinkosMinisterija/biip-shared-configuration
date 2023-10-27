@@ -1,0 +1,19 @@
+{
+  "name": "@aplinkosministerija/biip-shared-configuration",
+  "version": "1.0.0",
+  "description": "Shared configuration for BĮIP projects",
+  "private": true,
+  "scripts": {
+    "packages:changeset": "changeset",
+    "packages:publish": "changeset publish"
+  },
+  "dependencies": {
+    "@changesets/cli": "^2.26.2"
+  },
+  "repository": "https://github.com/AplinkosMinisterija/biip-shared-configuration.git",
+  "author": "Karolis Vyčius <k.vycius@gmail.com>",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ]
+}
