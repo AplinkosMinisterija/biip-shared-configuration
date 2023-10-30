@@ -1,6 +1,6 @@
 {
   "name": "@aplinkosministerija/biip-eslint-config",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Shared Eslint configuration",
   "main": "index.js",
   "license": "MIT",
