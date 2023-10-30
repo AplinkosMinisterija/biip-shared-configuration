@@ -1,5 +1,5 @@
 {
-  "name": "@aplinkosministerija/biip-eslint-config",
+  "name": "@aplinkosministerija/eslint-config",
   "version": "1.0.0",
   "description": "Shared Eslint configuration",
   "main": "index.js",
