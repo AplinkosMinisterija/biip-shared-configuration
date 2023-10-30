@@ -12,9 +12,6 @@ module.exports = {
 
     ignorePatterns: ['test/*', '.eslintrc.js'],
     parser: '@typescript-eslint/parser',
-    extends: [
-        'prettier',
-    ],
     parserOptions: {
         sourceType: 'module',
         ecmaVersion: '2018',
