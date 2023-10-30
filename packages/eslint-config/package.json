@@ -1,0 +1,32 @@
+{
+  "name": "@aplinkosministerija/biip-eslint-config",
+  "version": "0.0.1",
+  "description": "Shared Eslint configuration",
+  "main": "index.js",
+  "license": "MIT",
+  "homepage": "https://github.com/AplinkosMinisterija/biip-shared-configuration",
+  "sideEffects": false,
+  "author": {
+    "name": "Karolis Vyčius",
+    "email": "karolis@vycius.lt"
+  },
+  "keywords": [
+    "eslint"
+  ],
+  "bugs": {
+    "url": "https://github.com/AplinkosMinisterija/biip-shared-configuration/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AplinkosMinisterija/biip-shared-configuration.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "peerDependencies": {
+    "eslint": ">=8"
+  },
+  "engines": {
+    "node": "*"
+  }
+}
