@@ -46,7 +46,7 @@ yarn prettier . --write
 There are multiple ESLint shared configuration packages available for different project types:
 
 - `@aplinkosministerija/eslint-config-biip-api` - for configuring ESLint for API projects.
-- `@aplinkosministerija/eslint-config-biip-web` - for configuring ESLint for React applications.
+- `@aplinkosministerija/eslint-config-biip-react` - for configuring ESLint for React applications.
 
 Follow these steps to incorporate the shared ESLint configuration into your project:
 
