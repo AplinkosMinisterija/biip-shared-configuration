@@ -5,7 +5,7 @@ configuration effectively in your projects.
 
 ## Usage
 
-### Prettier Configuration
+### Prettier Shared Configuration
 
 Using the shared Prettier configuration is straightforward and helps maintain consistent code formatting across BĮIP
 projects.
@@ -39,6 +39,41 @@ projects.
 
 ```bash
 yarn prettier . --write
+```
+
+### ESLint Shared Configuration
+
+1. **Install the Package**
+
+   To get started, you need to install the `@aplinkosministerija/eslint-config-biip` package, which exports a ESLint
+   configuration object. You can do this using `yarn`:
+
+   ```bash
+   yarn add --dev @aplinkosministerija/eslint-config-biip
+   ```
+
+2. **Reference the Configuration in `package.json`**
+
+   Once the package is installed, you should reference it in your project's `package.json` file. This ensures that your
+   project uses the shared ESLint configuration:
+
+   ```json
+   {
+     "name": "my-cool-application",
+     "version": "1.0.0",
+     "eslintConfig": {
+        "extends": "@aplinkosministerija/eslint-config-biip"
+      }
+   }
+   ```
+
+   Now, your ESLint settings will align with the BIIP shared configuration, making it easy to maintain consistent code
+   quality and formatting. .
+
+**Pro-tip**: After adding it to your project, auto-fix your entire codebase using the following command:
+
+```bash
+yarn lint --fix
 ```
 
 ## Release
