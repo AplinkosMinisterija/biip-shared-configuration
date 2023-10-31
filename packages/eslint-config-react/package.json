@@ -1,7 +1,7 @@
 {
-  "name": "@aplinkosministerija/eslint-config-biip",
+  "name": "@aplinkosministerija/eslint-config-biip-react",
   "version": "1.0.0",
-  "description": "Shared Eslint configuration",
+  "description": "Shared Eslint configuration for react",
   "main": "index.js",
   "license": "MIT",
   "homepage": "https://github.com/AplinkosMinisterija/biip-shared-configuration",
@@ -23,8 +23,17 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
+  "devDependencies": {
+    "eslint": "^8.51.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint-plugin-react-refresh": "^0.4.4"
+  },
   "peerDependencies": {
-    "eslint": ">=8"
+    "eslint": ">=8",
+    "@typescript-eslint/eslint-plugin": ">=6",
+    "@typescript-eslint/parser": ">=6",
+    "eslint-plugin-react-refresh": "^0.4.3"
   },
   "engines": {
     "node": "*"

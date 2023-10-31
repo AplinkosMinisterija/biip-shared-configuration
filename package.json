@@ -8,8 +8,10 @@
     "packages:publish": "changeset publish"
   },
   "dependencies": {
+    "@aplinkosministerija/biip-prettier-config": "^1.1.0",
     "@changesets/cli": "^2.26.2"
   },
+  "prettier": "@aplinkosministerija/biip-prettier-config",
   "repository": "https://github.com/AplinkosMinisterija/biip-shared-configuration.git",
   "author": "Karolis Vyčius <k.vycius@gmail.com>",
   "license": "MIT",

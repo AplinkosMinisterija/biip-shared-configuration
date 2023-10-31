@@ -43,13 +43,20 @@ yarn prettier . --write
 
 ### ESLint Shared Configuration
 
+There are multiple ESLint shared configuration packages available for different project types:
+
+- `@aplinkosministerija/eslint-config-biip-api` - for configuring ESLint for API projects.
+- `@aplinkosministerija/eslint-config-biip-web` - for configuring ESLint for React applications.
+
+Follow these steps to incorporate the shared ESLint configuration into your project:
+
 1. **Install the Package**
 
    To get started, you need to install the `@aplinkosministerija/eslint-config-biip` package, which exports a ESLint
    configuration object. You can do this using `yarn`:
 
    ```bash
-   yarn add --dev @aplinkosministerija/eslint-config-biip
+   yarn add --dev @aplinkosministerija/eslint-config-biip-api
    ```
 
 2. **Reference the Configuration in `package.json`**
@@ -62,8 +69,8 @@ yarn prettier . --write
      "name": "my-cool-application",
      "version": "1.0.0",
      "eslintConfig": {
-        "extends": "@aplinkosministerija/eslint-config-biip"
-      }
+       "extends": "@aplinkosministerija/eslint-config-biip-api"
+     }
    }
    ```
 
@@ -105,4 +112,3 @@ Here are the steps to create a new package release:
    will be automatically pushed, and your changes will be released.
 
 By following these steps, you can ensure that your BĮIP package releases are well-organized and consistent.
-

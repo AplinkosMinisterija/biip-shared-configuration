@@ -7,7 +7,7 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
-permissions: { }
+permissions: {}
 
 jobs:
   release-packages:
@@ -41,4 +41,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
-

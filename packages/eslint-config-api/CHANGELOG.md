@@ -1,4 +1,4 @@
-# @aplinkosministerija/eslint-config-biip
+# @aplinkosministerija/eslint-config-biip-api
 
 ## 1.0.0
 
