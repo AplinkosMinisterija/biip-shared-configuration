@@ -5,7 +5,9 @@ configuration effectively in your projects.
 
 ## Usage
 
-### Prettier Shared Configuration
+### JavaScript packages
+
+#### Prettier Shared Configuration
 
 Using the shared Prettier configuration is straightforward and helps maintain consistent code formatting across BĮIP
 projects.
@@ -41,7 +43,7 @@ projects.
 yarn prettier . --write
 ```
 
-### ESLint Shared Configuration
+#### ESLint Shared Configuration
 
 There are multiple ESLint shared configuration packages available for different project types:
 
@@ -83,7 +85,9 @@ Follow these steps to incorporate the shared ESLint configuration into your proj
 yarn lint --fix
 ```
 
-# Caddy BĮIP Docker Image
+### Docker images
+
+#### Caddy BĮIP Docker Image
 
 The BĮIP team uses a customized Docker image for Caddy, which includes additional plugins.
 See [here](https://github.com/AplinkosMinisterija/biip-shared-configuration/pkgs/container/biip-caddy) for more
