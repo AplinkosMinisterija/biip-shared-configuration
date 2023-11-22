@@ -6,6 +6,7 @@ on:
       version:
         description: 'Caddy version'
         required: true
+        default: 2.7.5
         type: string
 
 permissions: { }
@@ -25,6 +26,7 @@ jobs:
       - name: Build & tag docker image
         uses: AplinkosMinisterija/reusable-workflows/.github/actions/docker-build-tag-push@main
         with:
+          docker-image: ghcr.io/biip-caddy
           build-args: CADDY_VERSION=${{ inputs.version }}
           environment: ${{ inputs.version }}
           docker-context: docker/caddy
