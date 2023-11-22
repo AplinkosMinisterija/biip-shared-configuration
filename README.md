@@ -83,6 +83,12 @@ Follow these steps to incorporate the shared ESLint configuration into your proj
 yarn lint --fix
 ```
 
+# Caddy BĮIP Docker Image
+
+The BĮIP team uses a customized Docker image for Caddy, which includes additional plugins.
+See [here](https://github.com/AplinkosMinisterija/biip-shared-configuration/pkgs/container/biip-caddy) for more
+information on how to use it.
+
 ## Release
 
 ### Creating a New Package Release
@@ -112,3 +118,14 @@ Here are the steps to create a new package release:
    will be automatically pushed, and your changes will be released.
 
 By following these steps, you can ensure that your BĮIP package releases are well-organized and consistent.
+
+### Creating Caddy docker image
+
+In order to publish BĮIP customized Caddy docker image:
+
+1. Go
+   to [`Publish: Caddy docker iamge`](https://github.com/AplinkosMinisterija/biip-shared-configuration/actions/workflows/publish-caddy-docker.yml)
+   workflow GitHub action;
+2. Enter image tag with Caddy version that you like to push e.g. `2.7.5` and run workflow.
+
+3. New BĮIP customized Caddy docker image will be pushed. 
