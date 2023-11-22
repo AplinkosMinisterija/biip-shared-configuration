@@ -30,4 +30,5 @@ jobs:
           build-args: CADDY_VERSION=${{ inputs.version }}
           environment: ${{ inputs.version }}
           docker-context: docker/caddy
+          registry-password: ${{ secrets.GHCR_REGISTRY_PASSWORD }}
           push: true
