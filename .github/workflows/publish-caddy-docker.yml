@@ -25,8 +25,7 @@ jobs:
       - name: Build & tag docker image
         uses: AplinkosMinisterija/reusable-workflows/.github/actions/docker-build-tag-push@main
         with:
-          docker-image: ghcr.io/biip-caddy
           build-args: CADDY_VERSION=${{ inputs.version }}
-          environment: production
+          environment: ${{ inputs.version }}
           docker-context: docker/caddy
           push: true
