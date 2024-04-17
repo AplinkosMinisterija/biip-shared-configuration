@@ -1,0 +1,33 @@
+name: Publish Postgres docker image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Postgres version'
+        required: true
+        default: 16
+        type: string
+
+permissions: { }
+
+jobs:
+  publish-postgres-docker:
+    name: Publish Postgres docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Build & tag docker image
+        uses: AplinkosMinisterija/reusable-workflows/.github/actions/docker-build-tag-push@main
+        with:
+          docker-image: ghcr.io/aplinkosministerija/biip-postgres
+          build-args: POSTGRES_VERSION=${{ inputs.version }}
+          environment: ${{ inputs.version }}
+          docker-context: docker/postgres
+          push: true
