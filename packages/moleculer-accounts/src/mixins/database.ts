@@ -1,46 +1,10 @@
 'use strict';
 
+import { Knex } from 'knex';
 import _ from 'lodash';
-import { Context } from 'moleculer';
+import { Context, ServiceSchema, ServiceSettingSchema } from 'moleculer';
 // @ts-ignore
 import { Service as DbService } from '@moleculer/database';
-import { Knex } from 'knex';
-
-export function PopulateHandlerFn(action: string) {
-  return async function (
-    ctx: Context<{ populate: string | string[] }>,
-    values: any[],
-    docs: any[],
-    field: any,
-  ) {
-    if (!values.length) return null;
-    const rule = field.populate;
-    let populate = rule.params?.populate;
-    if (rule.inheritPopulate) {
-      populate = ctx.params.populate;
-    }
-    const params = {
-      ...(rule.params || {}),
-      id: values,
-      mapping: true,
-      populate,
-      throwIfNotExist: false,
-    };
-
-    const byKey: any = await ctx.call(action, params, rule.callOptions);
-
-    let fieldName = field.name;
-    if (rule.keyField) {
-      fieldName = rule.keyField;
-    }
-
-    return docs?.map((d) => {
-      const fieldValue = d[fieldName];
-      if (!fieldValue) return null;
-      return byKey[fieldValue] || null;
-    });
-  };
-}
 
 function makeMapping(
   data: any[],
@@ -74,11 +38,11 @@ function makeMapping(
   }, {});
 }
 
-export default function (knex: Knex, opts: any = {}) {
+export function DatabaseMixin(config: Knex.Config, opts: any = {}) {
   const adapter: any = {
     type: 'Knex',
     options: {
-      knex,
+      knex: config,
       tableName: opts.collection,
     },
   };
@@ -97,17 +61,17 @@ export default function (knex: Knex, opts: any = {}) {
     };
   }
 
-  const schema = {
+  const schema: any = {
     mixins: [DbService(opts)],
 
     actions: {
       ...removeRestActions,
 
-      findOne(ctx: any) {
+      findOne(ctx: Context) {
         return this.findEntity(ctx);
       },
 
-      async updateMany(ctx: any) {
+      async updateMany(ctx: Context<any[]>) {
         const updatedItems = await Promise.all(
           ctx.params.map(async (item: any) => await this.updateEntity(ctx, { ...item })),
         );
@@ -115,22 +79,22 @@ export default function (knex: Knex, opts: any = {}) {
         return updatedItems;
       },
 
-      async removeMany(ctx: any) {
+      async removeMany(ctx: Context) {
         return this.removeEntities(ctx);
       },
 
-      async removeAllEntities(ctx: any) {
+      async removeAllEntities(ctx: Context) {
         return this.clearEntities(ctx);
       },
 
       async populateByProp(
         ctx: Context<{
-          id?: number | number[];
-          queryKey?: string;
-          query?: any;
+          id: number | number[];
+          queryKey: string;
+          query: any;
           mapping?: boolean;
           mappingMulti?: boolean;
-          mappingField?: string;
+          mappingField: string;
         }>,
       ): Promise<any> {
         const { queryKey, query, mapping, mappingMulti, mappingField } = ctx.params;
@@ -147,7 +111,7 @@ export default function (knex: Knex, opts: any = {}) {
           ...ctx.params,
           query: {
             ...(query || {}),
-            [`${queryKey}`]: { $in: ids },
+            [queryKey]: { $in: ids },
           },
         });
 
@@ -159,7 +123,7 @@ export default function (knex: Knex, opts: any = {}) {
         return ids.reduce(
           (acc: any, id) => ({
             ...acc,
-            [`${id}`]: resultById[`${id}`] || (mappingMulti ? [] : ''),
+            [`${id}`]: resultById[id] || (mappingMulti ? [] : ''),
           }),
           {},
         );
