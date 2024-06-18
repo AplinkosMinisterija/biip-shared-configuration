@@ -84,6 +84,31 @@ Follow these steps to incorporate the shared ESLint configuration into your proj
 ```bash
 yarn lint --fix
 ```
+#### Moleculer Accounts
+
+Follow these steps to incorporate the shared accounts package into your project:
+
+1. **Install the Package**
+
+   To get started, you need to install the `@aplinkosministerija/moleculer-accounts` package. You can do this using `yarn` or `npm`:
+
+   ```bash
+   yarn add @aplinkosministerija/moleculer-accounts
+   npm install @aplinkosministerija/moleculer-accounts
+   ```
+
+2. **Import package into your code**
+
+   ```js
+   import { DatabaseMixin } from '@aplinkosministerija/moleculer-accounts';
+   ```
+
+   Now you can shine
+
+3. **Documentation**
+
+   For more documentation visit [moleculer-accounts package](/packages/moleculer-accounts/README.md)
+
 
 ### Docker images
 

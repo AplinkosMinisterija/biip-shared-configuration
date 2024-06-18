@@ -8,7 +8,9 @@
   "homepage": "https://github.com/AplinkosMinisterija/biip-shared-configuration",
   "sideEffects": false,
   "files": [
-    "/dist"
+    "/dist",
+    "README.md",
+    "CHANGELOG.md"
   ],
   "keywords": [
     "moleculer",
