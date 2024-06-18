@@ -1,0 +1,45 @@
+{
+  "name": "@aplinkosministerija/moleculer-accounts",
+  "version": "0.0.1",
+  "description": "Wrapper around biip-auth-api for managing users & tenants",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "license": "MIT",
+  "homepage": "https://github.com/AplinkosMinisterija/biip-shared-configuration",
+  "sideEffects": false,
+  "keywords": [
+    "moleculer",
+    "accounts"
+  ],
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "dev": "ts-node src/index.ts",
+    "prepare": "yarn build"
+  },
+  "bugs": {
+    "url": "https://github.com/AplinkosMinisterija/biip-shared-configuration/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AplinkosMinisterija/biip-shared-configuration.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {
+    "@moleculer/database": "^0.2.0",
+    "knex": "^3.1.0",
+    "lodash": "^4.17.21",
+    "moleculer": "^0.14.33",
+    "moleculer-decorators": "^1.3.0",
+    "pg": "^8.12.0",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.5",
+    "ts-node": "^10.9.2"
+  }
+}
