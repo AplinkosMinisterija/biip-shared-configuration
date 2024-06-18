@@ -1,6 +1,6 @@
 {
   "name": "@aplinkosministerija/biip-shared-configuration",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Shared configuration for BĮIP projects",
   "private": true,
   "scripts": {
