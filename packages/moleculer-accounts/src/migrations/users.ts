@@ -1,7 +1,7 @@
 import { Knex } from 'knex';
 import { commonFields } from './common';
 
-export const UsersFields = {
+export const UsersMigration = {
   up(table: Knex.TableBuilder) {
     table.increments('id');
     table.string('firstName', 255);

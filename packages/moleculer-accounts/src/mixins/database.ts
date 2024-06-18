@@ -2,7 +2,7 @@
 
 import { Knex } from 'knex';
 import _ from 'lodash';
-import { Context, ServiceSchema, ServiceSettingSchema } from 'moleculer';
+import { Context } from 'moleculer';
 // @ts-ignore
 import { Service as DbService } from '@moleculer/database';
 
@@ -38,7 +38,13 @@ function makeMapping(
   }, {});
 }
 
-export function DatabaseMixin(config: Knex.Config, opts: any = {}) {
+export type DatabaseMixinOptions = {
+  collection?: string;
+  createActions?: boolean;
+  cache?: { [key: string]: any };
+  [key: string]: any;
+};
+export function DatabaseMixin(config: Knex.Config, opts: DatabaseMixinOptions = {}) {
   const adapter: any = {
     type: 'Knex',
     options: {

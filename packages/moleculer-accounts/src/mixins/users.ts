@@ -1,36 +1,42 @@
-export const UsersMixin = {
-  settings: {
-    fields: {
-      id: {
-        type: 'string',
-        columnType: 'integer',
-        primaryKey: true,
-        secure: true,
-      },
+import { Knex } from 'knex';
+import { DatabaseMixin, DatabaseMixinOptions } from './database';
 
-      firstName: 'string',
+export function UsersMixin(config: Knex.Config, opts?: DatabaseMixinOptions) {
+  return {
+    mixins: [DatabaseMixin(config, opts)],
+    settings: {
+      fields: {
+        id: {
+          type: 'string',
+          columnType: 'integer',
+          primaryKey: true,
+          secure: true,
+        },
 
-      lastName: 'string',
+        firstName: 'string',
 
-      fullName: {
-        type: 'string',
-        virtual: true,
-        get: ({ entity }: any) => `${entity.firstName} ${entity.lastName}`,
-      },
+        lastName: 'string',
 
-      email: 'string',
+        fullName: {
+          type: 'string',
+          virtual: true,
+          get: ({ entity }: any) => `${entity.firstName} ${entity.lastName}`,
+        },
 
-      phone: 'string',
+        email: 'string',
 
-      authUser: {
-        type: 'number',
-        columnType: 'integer',
-        columnName: 'authUserId',
-        populate: 'auth.users.get',
-        async onRemove({ ctx, entity }: any) {
-          await ctx.call('auth.users.remove', { id: entity.authUserId }, { meta: ctx?.meta });
+        phone: 'string',
+
+        authUser: {
+          type: 'number',
+          columnType: 'integer',
+          columnName: 'authUserId',
+          populate: 'auth.users.get',
+          async onRemove({ ctx, entity }: any) {
+            await ctx.call('auth.users.remove', { id: entity.authUserId }, { meta: ctx?.meta });
+          },
         },
       },
     },
-  },
-};
+  };
+}
