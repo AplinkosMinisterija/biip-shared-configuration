@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 import { DatabaseMixin, DatabaseMixinOptions } from './database';
-import { COMMON_SETTINGS_FIELDS } from '../constants';
+import { COMMON_FIELDS } from '../constants';
+import { Context } from 'moleculer';
 
 export enum TenantUserRole {
   ADMIN = 'ADMIN',
@@ -43,7 +44,27 @@ export function TenantUsersMixin(
           default: TenantUserRole.USER,
         },
 
-        ...COMMON_SETTINGS_FIELDS,
+        ...COMMON_FIELDS,
+      },
+    },
+
+    actions: {
+      getRole: {
+        params: {
+          tenant: 'number|convert',
+          user: 'number|convert',
+        },
+        async handler(ctx: Context<{ tenant: number; user: number }>) {
+          const tenantUser: any = await ctx.call('tenantUsers.findOne', {
+            query: {
+              tenant: ctx.params.tenant,
+              user: ctx.params.user,
+            },
+            fields: ['role'],
+          });
+
+          return tenantUser?.role;
+        },
       },
     },
   };

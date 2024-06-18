@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 import { DatabaseMixin, DatabaseMixinOptions } from './database';
-import { COMMON_SETTINGS_FIELDS } from '../constants';
+import { COMMON_FIELDS } from '../constants';
 
 export function TenantsMixin(config: Knex.Config, opts?: DatabaseMixinOptions) {
   return {
@@ -33,7 +33,23 @@ export function TenantsMixin(config: Knex.Config, opts?: DatabaseMixinOptions) {
           },
         },
 
-        ...COMMON_SETTINGS_FIELDS,
+        role: {
+          virtual: true,
+          type: 'string',
+          populate(ctx: any, _values: any, tenants: any[]) {
+            return Promise.all(
+              tenants.map(async (tenant: any) => {
+                if (!ctx.meta.user?.id) return;
+                return ctx.call('tenantUsers.getRole', {
+                  tenant: tenant.id,
+                  user: ctx.meta.user.id,
+                });
+              }),
+            );
+          },
+        },
+
+        ...COMMON_FIELDS,
       },
     },
   };

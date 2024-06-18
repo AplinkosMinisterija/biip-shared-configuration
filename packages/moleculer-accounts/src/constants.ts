@@ -6,7 +6,7 @@ export enum RestrictionType {
   PUBLIC = 'PUBLIC',
 }
 
-export const COMMON_SETTINGS_FIELDS = {
+export const COMMON_FIELDS = {
   createdBy: {
     type: 'string',
     readonly: true,

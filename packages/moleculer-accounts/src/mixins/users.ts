@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 import { DatabaseMixin, DatabaseMixinOptions } from './database';
-import { COMMON_SETTINGS_FIELDS } from '../constants';
+import { COMMON_FIELDS } from '../constants';
 
 export enum UserType {
   ADMIN = 'ADMIN',
@@ -52,7 +52,23 @@ export function UsersMixin(config: Knex.Config, opts?: DatabaseMixinOptions) {
           },
         },
 
-        ...COMMON_SETTINGS_FIELDS,
+        role: {
+          virtual: true,
+          type: 'string',
+          populate(ctx: any, _values: any, users: any[]) {
+            return Promise.all(
+              users.map(async (user: any) => {
+                if (!ctx.meta.profile?.id) return;
+                return ctx.call('tenantUsers.getRole', {
+                  tenant: ctx.meta.profile.id,
+                  user: user.id,
+                });
+              }),
+            );
+          },
+        },
+
+        ...COMMON_FIELDS,
       },
     },
   };
