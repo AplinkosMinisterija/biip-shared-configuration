@@ -1,0 +1,5 @@
+# Do not include this files in build set
+src/
+
+# Typescript build config
+tsconfig.json
