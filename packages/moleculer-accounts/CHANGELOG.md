@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.2.0
+
+### Minor Changes
+
+- 25f3f3b: Implementation of tenants, tenant users & connections between them
+
 ## 1.1.1
 
 ### Patch Changes
