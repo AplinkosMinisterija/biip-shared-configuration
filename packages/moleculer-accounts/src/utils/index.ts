@@ -1,5 +1,6 @@
 import { Context } from 'moleculer';
 import _ from 'lodash';
+export * from './tokens';
 
 type ActionType = string | { [key: string]: string };
 
