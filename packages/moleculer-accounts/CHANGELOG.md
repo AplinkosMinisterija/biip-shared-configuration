@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.2.1
+
+### Patch Changes
+
+- 3ac88cd: Tokens functionality added
+
 ## 1.2.0
 
 ### Minor Changes
