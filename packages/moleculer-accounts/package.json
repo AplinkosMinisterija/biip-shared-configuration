@@ -35,7 +35,7 @@
     "node": "*"
   },
   "dependencies": {
-    "@moleculer/database": "^0.2.0",
+    "@moleculer/database": "github:ambrazasp/moleculerjs-database",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
     "lodash": "^4.17.21",

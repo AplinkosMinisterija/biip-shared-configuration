@@ -339,12 +339,11 @@
     globby "^11.0.0"
     read-yaml-file "^1.1.0"
 
-"@moleculer/database@^0.2.0":
+"@moleculer/database@github:ambrazasp/moleculerjs-database":
   version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@moleculer/database/-/database-0.2.0.tgz#00eb37fdfebfec506f9ad1b418b5ab17583c21c9"
-  integrity sha512-V0bqGrE4jWgx6alm5ZMTMlyM7uI8TxH5QSBLxzH7gKk5hnEm3KFZTbBuyf4DlL+OFtwgiy0eMF6joCVb3M/LXw==
+  resolved "https://codeload.github.com/ambrazasp/moleculerjs-database/tar.gz/4a2c480dfce13cf6fbe62ce333543560685b2435"
   dependencies:
-    fastest-validator "^1.17.0"
+    fastest-validator "^1.18.0"
     lodash "^4.17.21"
     semver "^7.6.0"
     sqlite3 "^5.1.7"
@@ -1406,6 +1405,11 @@ fastest-validator@^1.17.0:
   version "1.18.0"
   resolved "https://registry.yarnpkg.com/fastest-validator/-/fastest-validator-1.18.0.tgz#77a51fa09de13727f3216827a2cbd9f90e09a84c"
   integrity sha512-3v6UJF1U/b56GqzDZqEtgPi2g261eGI9zQWDUrmOVKHiAktFIsHklp4XViX+a4yF7S5JjPm4KKmkgCsaara03g==
+
+fastest-validator@^1.18.0:
+  version "1.19.0"
+  resolved "https://registry.yarnpkg.com/fastest-validator/-/fastest-validator-1.19.0.tgz#96f792ce774a81a76efba32974e669c47a2b15eb"
+  integrity sha512-wUfJBrXmccVz4kARAiWTkuqsC6EFeqbNxwfysCDk+maExBPP8KxyBwaWtayrWjKIaBIbaz+rqI2kel6ecayxcg==
 
 fastq@^1.6.0:
   version "1.15.0"
