@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.3.0
+
+### Minor Changes
+
+- 9cf5839: Vector tiles mixin setup
+
 ## 1.2.2
 
 ### Patch Changes
