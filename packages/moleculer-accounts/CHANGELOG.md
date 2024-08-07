@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.2.2
+
+### Patch Changes
+
+- eccd9c1: Fixed moleculer database package (use from fork)
+
 ## 1.2.1
 
 ### Patch Changes
