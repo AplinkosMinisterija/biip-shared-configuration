@@ -1,3 +1,5 @@
+import Moleculer, { Errors } from 'moleculer';
+
 export enum RestrictionType {
   USER = 'USER',
   ADMIN = 'ADMIN',
@@ -47,3 +49,9 @@ export const COMMON_FIELDS = {
     onRemove: () => new Date(),
   },
 };
+
+export type QueryObject = { [key: string]: any };
+
+export function throwNotFoundError(message?: string, data?: any): Errors.MoleculerError {
+  throw new Moleculer.Errors.MoleculerClientError(message || `Not found.`, 404, 'NOT_FOUND', data);
+}

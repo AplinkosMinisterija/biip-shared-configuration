@@ -339,6 +339,18 @@
     globby "^11.0.0"
     read-yaml-file "^1.1.0"
 
+"@mapbox/point-geometry@0.1.0", "@mapbox/point-geometry@~0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@mapbox/point-geometry/-/point-geometry-0.1.0.tgz#8a83f9335c7860effa2eeeca254332aa0aeed8f2"
+  integrity sha512-6j56HdLTwWGO0fJPlrZtdU/B13q8Uwmo18Ck2GnGgN9PCFyKTZ3UbXeEdRFh18i9XQ92eH2VdtpJHpBD3aripQ==
+
+"@mapbox/vector-tile@^1.3.1":
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/@mapbox/vector-tile/-/vector-tile-1.3.1.tgz#d3a74c90402d06e89ec66de49ec817ff53409666"
+  integrity sha512-MCEddb8u44/xfQ3oD+Srl/tNcQoqTw3goGk2oLsrFxOTc3dUp+kAnby3PvAeeBYSMSjSPD1nd1AJA6W49WnoUw==
+  dependencies:
+    "@mapbox/point-geometry" "~0.1.0"
+
 "@moleculer/database@github:ambrazasp/moleculerjs-database":
   version "0.2.0"
   resolved "https://codeload.github.com/ambrazasp/moleculerjs-database/tar.gz/4a2c480dfce13cf6fbe62ce333543560685b2435"
@@ -410,6 +422,11 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.4.tgz#0b92dcc0cc1c81f6f306a381f28e31b1a56536e9"
   integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
 
+"@types/geojson@*":
+  version "7946.0.14"
+  resolved "https://registry.yarnpkg.com/@types/geojson/-/geojson-7946.0.14.tgz#319b63ad6df705ee2a65a73ef042c8271e696613"
+  integrity sha512-WCfD5Ht3ZesJUsONdhvm84dmzWOiOzOAqOncN0++w0lBw1o8OuDNJF2McvvCef/yBqb/HYRahp1BYtODFQ8bRg==
+
 "@types/is-ci@^3.0.0":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@types/is-ci/-/is-ci-3.0.3.tgz#6042f2fe12a16b2616deabb11d9a422f46a2ec03"
@@ -460,6 +477,13 @@
   version "7.5.4"
   resolved "https://registry.yarnpkg.com/@types/semver/-/semver-7.5.4.tgz#0a41252ad431c473158b22f9bfb9a63df7541cff"
   integrity sha512-MMzuxN3GdFwskAnb6fz0orFvhfqi752yjaXylr0Rp4oDg5H0Zn1IuyRhDVvYOwAXoJirx2xuS16I3WjxnAIHiQ==
+
+"@types/supercluster@^7.1.3":
+  version "7.1.3"
+  resolved "https://registry.yarnpkg.com/@types/supercluster/-/supercluster-7.1.3.tgz#1a1bc2401b09174d9c9e44124931ec7874a72b27"
+  integrity sha512-Z0pOY34GDFl3Q6hUFYf3HkTwKEE02e7QgtJppBt+beEAxnyOpJua+voGFvxINBHa06GwLFFym7gRPY2SiKIfIA==
+  dependencies:
+    "@types/geojson" "*"
 
 "@typescript-eslint/eslint-plugin@^6.0.0":
   version "6.9.1"
@@ -1406,7 +1430,7 @@ fastest-validator@^1.17.0:
   resolved "https://registry.yarnpkg.com/fastest-validator/-/fastest-validator-1.18.0.tgz#77a51fa09de13727f3216827a2cbd9f90e09a84c"
   integrity sha512-3v6UJF1U/b56GqzDZqEtgPi2g261eGI9zQWDUrmOVKHiAktFIsHklp4XViX+a4yF7S5JjPm4KKmkgCsaara03g==
 
-fastest-validator@^1.18.0:
+fastest-validator@^1.18.0, fastest-validator@^1.19.0:
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/fastest-validator/-/fastest-validator-1.19.0.tgz#96f792ce774a81a76efba32974e669c47a2b15eb"
   integrity sha512-wUfJBrXmccVz4kARAiWTkuqsC6EFeqbNxwfysCDk+maExBPP8KxyBwaWtayrWjKIaBIbaz+rqI2kel6ecayxcg==
@@ -1550,6 +1574,14 @@ gauge@^4.0.3:
     string-width "^4.2.3"
     strip-ansi "^6.0.1"
     wide-align "^1.1.5"
+
+geojsonjs@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/geojsonjs/-/geojsonjs-0.1.2.tgz#470a905671a50e712a39edd4cd16ed9755a2a387"
+  integrity sha512-ixEYX5NPi2K66eEbU6r93Dw2lkQdnfEiNuIXnRPgumzDrKp1k1xlJDN1AODA+gqvsb3r3Rz1EexmTfvjgnKPCg==
+  dependencies:
+    lodash "^4.17.21"
+    typescript "^4.5.5"
 
 get-caller-file@^2.0.1, get-caller-file@^2.0.5:
   version "2.0.5"
@@ -1772,7 +1804,7 @@ iconv-lite@^0.6.2:
   dependencies:
     safer-buffer ">= 2.1.2 < 3.0.0"
 
-ieee754@^1.1.13:
+ieee754@^1.1.12, ieee754@^1.1.13:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.2.1.tgz#8eb7a10a63fff25d15a57b001586d177d1b0d352"
   integrity sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==
@@ -1845,7 +1877,7 @@ ip-address@^9.0.5:
     jsbn "1.1.0"
     sprintf-js "^1.1.3"
 
-ipaddr.js@^2.1.0:
+ipaddr.js@^2.1.0, ipaddr.js@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/ipaddr.js/-/ipaddr.js-2.2.0.tgz#d33fa7bac284f4de7af949638c9d68157c6b92e8"
   integrity sha512-Ag3wB2o37wslZS19hZqorUnrnzSkpOVy+IiiDEiTqNubEYpYuHWIf6K4psgN2ZWKExS4xhVCrRVfb/wfW8fWJA==
@@ -2103,6 +2135,11 @@ jws@^3.2.2:
   dependencies:
     jwa "^1.4.1"
     safe-buffer "^5.0.1"
+
+kdbush@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/kdbush/-/kdbush-3.0.0.tgz#f8484794d47004cc2d85ed3a79353dbe0abc2bf0"
+  integrity sha512-hRkd6/XW4HTsA9vjVpY9tuXJYLSlelnkTmVFu4M9/7MIYQtFcHpbugAU7UbOfjOiVSVYl2fqgBuJ32JUmRo5Ew==
 
 keyv@^4.5.3:
   version "4.5.4"
@@ -2427,6 +2464,16 @@ moleculer-decorators@^1.3.0:
   dependencies:
     moleculer "^0.14.0"
 
+moleculer-postgis@^0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/moleculer-postgis/-/moleculer-postgis-0.3.3.tgz#ee82573d74f3a671ccb7d9383dd63e3a4d6a97b5"
+  integrity sha512-XTLHtgCOZaFAFQzcXILe2dKxBnUiaBr+5torts8StoBHyAca0J1pHI7Nhd7zdybDtYWb88bZLjfm4HYLv1wgsQ==
+  dependencies:
+    geojsonjs "^0.1.2"
+    lodash "^4.17.21"
+    moleculer "^0.14.31"
+    typescript "^4.5.5"
+
 moleculer@^0.14.0, moleculer@^0.14.33:
   version "0.14.33"
   resolved "https://registry.yarnpkg.com/moleculer/-/moleculer-0.14.33.tgz#9ceeb7466b155948348ed3d18cdafaec644b7472"
@@ -2437,6 +2484,22 @@ moleculer@^0.14.0, moleculer@^0.14.33:
     fastest-validator "^1.17.0"
     glob "^7.2.0"
     ipaddr.js "^2.1.0"
+    kleur "^4.1.5"
+    lodash "^4.17.21"
+    lru-cache "^6.0.0"
+    node-fetch "^2.6.7"
+    recursive-watch "^1.1.4"
+
+moleculer@^0.14.31:
+  version "0.14.34"
+  resolved "https://registry.yarnpkg.com/moleculer/-/moleculer-0.14.34.tgz#bbed4d133110b8a2610be0a8c348fb2db353348b"
+  integrity sha512-xILOSPqo4ATKhhAhvQXRBgMVbaKHPKBvgYasihVCmPGYK7QCeLnoOV+MD+a4/VmyEjLaAOzlIQBSYIUu0mwg9Q==
+  dependencies:
+    args "^5.0.3"
+    eventemitter2 "^6.4.9"
+    fastest-validator "^1.19.0"
+    glob "^7.2.0"
+    ipaddr.js "^2.2.0"
     kleur "^4.1.5"
     lodash "^4.17.21"
     lru-cache "^6.0.0"
@@ -2678,6 +2741,14 @@ path-type@^4.0.0:
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
 
+pbf@^3.2.1:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/pbf/-/pbf-3.3.0.tgz#1790f3d99118333cc7f498de816028a346ef367f"
+  integrity sha512-XDF38WCH3z5OV/OVa8GKUNtLAyneuzbCisx7QUCF8Q6Nutx0WnJrQe5O+kOtBlLfRNUws98Y58Lblp+NJG5T4Q==
+  dependencies:
+    ieee754 "^1.1.12"
+    resolve-protobuf-schema "^2.1.0"
+
 pg-cloudflare@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/pg-cloudflare/-/pg-cloudflare-1.1.1.tgz#e6d5833015b170e23ae819e8c5d7eaedb472ca98"
@@ -2829,6 +2900,11 @@ promise-retry@^2.0.1:
     err-code "^2.0.2"
     retry "^0.12.0"
 
+protocol-buffers-schema@^3.3.1:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/protocol-buffers-schema/-/protocol-buffers-schema-3.6.0.tgz#77bc75a48b2ff142c1ad5b5b90c94cd0fa2efd03"
+  integrity sha512-TdDRD+/QNdrCGCE7v8340QyuXd4kIWIgapsE2+n/SaGiSSbomYl4TjHlvIoCWRpE7wFt02EpB35VVA2ImcBVqw==
+
 pseudomap@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/pseudomap/-/pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3"
@@ -2960,6 +3036,13 @@ resolve-from@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-5.0.0.tgz#c35225843df8f776df21c57557bc087e9dfdfc69"
   integrity sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==
+
+resolve-protobuf-schema@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/resolve-protobuf-schema/-/resolve-protobuf-schema-2.1.0.tgz#9ca9a9e69cf192bbdaf1006ec1973948aa4a3758"
+  integrity sha512-kI5ffTiZWmJaS/huM8wZfEMer1eRd7oJQhDuxeCLe3t7N7mX3z94CN0xPxBQxFYQTSNz9T0i+v6inKqSdK8xrQ==
+  dependencies:
+    protocol-buffers-schema "^3.3.1"
 
 resolve@^1.10.0, resolve@^1.20.0:
   version "1.22.8"
@@ -3302,6 +3385,13 @@ strip-json-comments@~2.0.1:
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
   integrity sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==
 
+supercluster@7.1.5:
+  version "7.1.5"
+  resolved "https://registry.yarnpkg.com/supercluster/-/supercluster-7.1.5.tgz#65a6ce4a037a972767740614c19051b64b8be5a3"
+  integrity sha512-EulshI3pGUM66o6ZdH3ReiFcvHpM3vAigyK+vcxdjpJyEbIIrtbmBdY23mGgnI24uXiGFvrGq9Gkum/8U7vJWg==
+  dependencies:
+    kdbush "^3.0.0"
+
 supports-color@^5.3.0:
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-5.5.0.tgz#e2e69a44ac8772f78a1ec0b35b689df6530efc8f"
@@ -3513,6 +3603,11 @@ typed-array-length@^1.0.4:
     for-each "^0.3.3"
     is-typed-array "^1.1.9"
 
+typescript@^4.5.5:
+  version "4.9.5"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
+  integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
+
 typescript@^5.4.5:
   version "5.4.5"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.4.5.tgz#42ccef2c571fdbd0f6718b1d1f5e6e5ef006f611"
@@ -3576,6 +3671,15 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
+
+vt-pbf@^3.1.3:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/vt-pbf/-/vt-pbf-3.1.3.tgz#68fd150756465e2edae1cc5c048e063916dcfaac"
+  integrity sha512-2LzDFzt0mZKZ9IpVF2r69G9bXaP2Q2sArJCmcCgvfTdCCZzSyz4aCLoQyUilu37Ll56tCblIZrXFIjNUpGIlmA==
+  dependencies:
+    "@mapbox/point-geometry" "0.1.0"
+    "@mapbox/vector-tile" "^1.3.1"
+    pbf "^3.2.1"
 
 wcwidth@^1.0.1:
   version "1.0.1"
