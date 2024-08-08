@@ -95,7 +95,9 @@ export function TilesMixin(opts: {
               layers[layerName] = tileObjects;
             }
 
-            return Buffer.from(vtpbf.fromGeojsonVt(layers, { extent: superclusterOpts.extent }));
+            return Buffer.from(
+              vtpbf.fromGeojsonVt(layers, { extent: superclusterOpts.extent, version: 2 }),
+            );
           }
 
           // show real geometries
