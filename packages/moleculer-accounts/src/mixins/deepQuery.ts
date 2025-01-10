@@ -3,9 +3,9 @@
 import { Knex } from 'knex';
 import { snakeCase, wrap } from 'lodash';
 
-type DeepService = {
+export type DeepService = {
   _joinField: any;
-  getPrimaryKeyColumnName: any;
+  _getPrimaryKeyColumnName: any;
   _getSelectFields: any;
   _getServiceQuery: (knex: any) => Knex;
 };
@@ -25,121 +25,7 @@ export type DeepQuery = {
   serviceQuery: (serviceOrName: string | DeepService) => Knex;
 };
 
-/**
-Moleculer Database "fields" example 
-
-      tenant: {
-        type: 'number',
-        columnType: 'integer',
-        required: false,
-        immutable: false,
-        columnName: 'tenantId',
-        populate: {
-          action: 'tenants.resolve',
-        },
-        deepQuery: 'tenants',
-      },
-
-      tenant2: {
-        type: 'number',
-        columnType: 'integer',
-        required: false,
-        immutable: false,
-        columnName: 'tenantId',
-        populate: {
-          action: 'tenants.resolve',
-        },
-        deepQuery({
-          getService,
-          field,
-          serviceQuery,
-          serviceFields,
-          withQuery,
-          deeper,
-        }: DeepQuery) {
-          const subService = getService('tenants');
-          const column = this.settings.fields[field]?.columnName || field;
-          const subColumn = subService.getIdColumnName();
-
-          const subQuery = serviceQuery(subService);
-          subQuery.select(serviceFields(subService));
-          withQuery(subQuery, column, subColumn);
-
-          // continue recursion
-          deeper(subService);
-        },
-      },
-
-      lastHuntingRaw: {
-        virtual: true,
-        deepQuery({ knex, subTableName, tableName, q, deeper }: DeepQuery) {
-          q.with(
-            subTableName,
-            knex.raw(`SELECT DISTINCT ON (hunting_area_id) hunting_area_id as ${subTableName}_hunting_area, status as ${subTableName}_status, created_by as ${subTableName}_created_by
-FROM huntings
-WHERE deleted_at IS NULL
-ORDER BY hunting_area_id, id DESC`)
-          );
-
-          q.leftJoin(subTableName, function () {
-            this.on(
-              `${tableName}.id`,
-              '=',
-              `${subTableName}.${subTableName}_hunting_area`
-            );
-          });
-
-          // OPTIONAL: recursion
-          deeper('huntings');
-        },
-      },
-
-      lastHunting: {
-        virtual: true,
-
-        deepQuery({
-          getService,
-          serviceQuery,
-          serviceFields,
-          subTableName,
-          withQuery,
-          knex,
-          deeper,
-        }: DeepQuery) {
-          const subService = getService('huntings');
-
-          // Sukuria q:Knex, su FROM, ir deleted_at is null (jei soft-delete)
-          const subQuery = serviceQuery(subService);
-
-          // Grazina huntings serviso visus fieldus jau prefixintus { xxxxx_huntingArea: huntingAreaId, ....}
-          const fieldsAll = serviceFields(subService);
-
-          // Remove duplicate distinct field
-          const fields = Object.fromEntries(
-            Object.entries(fieldsAll).filter(
-              ([_key, value]) => value !== 'huntingAreaId'
-            )
-          );
-
-          subQuery.select(
-            knex.raw(
-              `DISTINCT ON (hunting_area_id) hunting_area_id as ${subTableName}_hunting_area`
-            ),
-            fields
-          );
-
-          subQuery
-            .orderBy(`${subTableName}_hunting_area`) // Required for DISTINCT ON
-            .orderBy('id', 'desc'); // Secondary ordering
-
-          withQuery(subQuery, 'id', 'huntingArea');
-
-          // Deeper
-          deeper(subService);
-        },
-*/
-
-export default function () {
+export function DeepQueryMixin() {
   const schema = {
     methods: {
       // RECURSIVE!!!
@@ -152,7 +38,7 @@ export default function () {
           case 'string':
             const subService = getService(fieldSettings.deepQuery);
             const column = this.settings.fields[field]?.columnName || field;
-            const subColumn = subService.getPrimaryKeyColumnName();
+            const subColumn = subService._getPrimaryKeyColumnName();
 
             const subQuery = serviceQuery(subService);
             subQuery.select(serviceFields(subService));
@@ -184,17 +70,27 @@ export default function () {
       },
 
       _getServiceQuery(knex: any) {
-        const q: Knex = knex(this.getTableName());
+        const q: Knex = knex(this._getTableName());
         if (this.settings.fields.deletedAt) {
           q.whereNull(this.settings.fields.deletedAt.columnName || 'deletedAt');
         }
         return q;
+      },
+
+      _getTableName() {
+        return this.settings.tableName;
+      },
+
+      _getPrimaryKeyColumnName() {
+        // TODO: filter this.settings.fields by primaryKey: true; return key or columnName
+        return 'id';
       },
     },
 
     async started() {
       const adapter = await this.getAdapter();
       const knex = adapter.client;
+      this.settings.tableName = adapter.opts.tableName;
 
       adapter.createQuery = wrap(
         adapter.createQuery,
@@ -229,7 +125,7 @@ export default function () {
             const params: Partial<DeepQuery> = {
               knex,
               q,
-              tableName: snakeCase(this.getTableName()),
+              tableName: snakeCase(this._getTableName()),
               subTableName: snakeCase(fields[0]),
               field: fields[0],
               fields,
