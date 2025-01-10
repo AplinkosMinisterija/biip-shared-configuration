@@ -1,5 +1,11 @@
 import { Knex } from 'knex';
 import { DatabaseMixin, DatabaseMixinOptions } from './database';
+import { COMMON_FIELDS } from '../constants';
+
+export enum UserType {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
 
 export function UsersMixin(config: Knex.Config, opts?: DatabaseMixinOptions) {
   return {
@@ -23,9 +29,18 @@ export function UsersMixin(config: Knex.Config, opts?: DatabaseMixinOptions) {
           get: ({ entity }: any) => `${entity.firstName} ${entity.lastName}`,
         },
 
-        email: 'string',
+        email: 'email',
 
-        phone: 'string',
+        phone: {
+          type: 'string',
+          // TODO: validate
+        },
+
+        type: {
+          type: 'string',
+          enum: Object.values(UserType),
+          default: UserType.USER,
+        },
 
         authUser: {
           type: 'number',
@@ -36,6 +51,24 @@ export function UsersMixin(config: Knex.Config, opts?: DatabaseMixinOptions) {
             await ctx.call('auth.users.remove', { id: entity.authUserId }, { meta: ctx?.meta });
           },
         },
+
+        role: {
+          virtual: true,
+          type: 'string',
+          populate(ctx: any, _values: any, users: any[]) {
+            return Promise.all(
+              users.map(async (user: any) => {
+                if (!ctx.meta.profile?.id) return;
+                return ctx.call('tenantUsers.getRole', {
+                  tenant: ctx.meta.profile.id,
+                  user: user.id,
+                });
+              }),
+            );
+          },
+        },
+
+        ...COMMON_FIELDS,
       },
     },
   };

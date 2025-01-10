@@ -39,12 +39,12 @@ function makeMapping(
 }
 
 export type DatabaseMixinOptions = {
-  collection?: string;
+  collection: string;
   createActions?: boolean;
   cache?: { [key: string]: any };
   [key: string]: any;
 };
-export function DatabaseMixin(config: Knex.Config, opts: DatabaseMixinOptions = {}) {
+export function DatabaseMixin(config: Knex.Config, opts: DatabaseMixinOptions) {
   const adapter: any = {
     type: 'Knex',
     options: {
