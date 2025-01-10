@@ -41,7 +41,7 @@ To enable deep queries (similar to left joins), you need to add a `deepQuery` pr
 
 #### Automatic Deep Query
 
-The easiest option is to specify the sub-service name in the `deepQuery` property. This will automatically join tables using the `id` and `subServiceId` columns.
+The easiest option is to specify the sub-service name in the `deepQuery` property. This will automatically join tables using the `<fieldName>` and `subService.<id>` columns.
 
 ```js
 fields: {
