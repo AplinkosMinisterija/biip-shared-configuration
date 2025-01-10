@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.4.0
+
+### Minor Changes
+
+- 0ad7b56: Added DeepQuery mixin. No breaking changes
+
 ## 1.3.0
 
 ### Minor Changes
