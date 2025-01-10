@@ -24,7 +24,7 @@
 
 ## Deep Query Mixin
 
-Mixin comes by default with `database` mixin. If you are using `DatabaseMixin` other than `moleculer-accounts`, you can add it like that:
+The `DeepQuery` mixin is included by default with the `DatabaseMixin`. If you are using a `DatabaseMixin` other than `moleculer-accounts`, you can add it like this:
 
 ```js
 export const YourService = {
@@ -33,15 +33,15 @@ export const YourService = {
 };
 ```
 
-Be aware - it should go BEFORE `DatabaseMixin`.
+**Note:** The `DeepQuery` mixin must be added **before** `DatabaseMixin`.
 
 ### Setup
 
-To be able to use deep queries (left-join-like), you need to add `deepQuery` property to your database fields schema.
+To enable deep queries (similar to left joins), you need to add a `deepQuery` property to your database fields schema.
 
-#### Automatic deep query
+#### Automatic Deep Query
 
-Easiest option is to specify sub-service name in `deepQuery` property. It will automatically join tables by `id` and `subServiceId` columns.
+The easiest option is to specify the sub-service name in the `deepQuery` property. This will automatically join tables using the `id` and `subServiceId` columns.
 
 ```js
 fields: {
@@ -53,12 +53,11 @@ fields: {
 }
 ```
 
-#### Manual deep query
+#### Manual Deep Query
 
-Manual deep query is more tricky, but gives you more control over the query.
-We provide many helper functions to make it easier to write deep queries.
-Basically you have to extend predefined `q: Knex` query usually with `with` by providing sub-fields and join it with main query.
-Trickiest part is to prefix all the fields, here are some examples:
+Manual deep queries offer greater control but are more complex. We provide several helper functions to simplify writing these queries. Generally, you need to extend the predefined `q: Knex` query (usually with `with`) by defining sub-fields and joining them with the main query.
+
+The most challenging part is prefixing all fields correctly. Here are some examples:
 
 ```js
 fields: {
@@ -81,7 +80,7 @@ fields: {
       subQuery.select(serviceFields(subService));
       withQuery(subQuery, column, subColumn);
 
-      // continue recursion
+      // Continue recursion
       deeper(subService);
     },
   },
@@ -91,7 +90,7 @@ fields: {
     deepQuery({ knex, subTableName, tableName, q, deeper }: DeepQuery) {
       q.with(
         subTableName,
-        knex.raw(`SELECT DISTINCT ON (hunting_area_id) hunting_area_id as ${subTableName}_hunting_area, status as ${subTableName}_status, created_by as ${subTableName}_created_by
+        knex.raw(`SELECT DISTINCT ON (hunting_area_id) hunting_area_id AS ${subTableName}_hunting_area, status AS ${subTableName}_status, created_by AS ${subTableName}_created_by
 FROM huntings
 WHERE deleted_at IS NULL
 ORDER BY hunting_area_id, id DESC`)
@@ -105,7 +104,7 @@ ORDER BY hunting_area_id, id DESC`)
         );
       });
 
-      // OPTIONAL: recursion
+      // OPTIONAL: Continue recursion
       deeper('huntings');
     },
   }
@@ -114,49 +113,50 @@ ORDER BY hunting_area_id, id DESC`)
 
 ### Usage
 
-Querying with deep query is as simple and powerful, with multi-level support.
+Using deep queries is straightforward and supports multiple levels.
 
 ```bash
-# 1 level deep query
+# Single-level deep query
 call huntings.find {"query":{"huntingArea.municipality":{$in:[33,72]}}}
 call huntings.find {"query":{"huntingArea.municipality":72}}
 
-# multi-level
+# Multi-level deep query
 call huntings.find {"query":{"huntingArea.createdBy.firstName":"Peter"}}
 
-# you can go as deep as you want
+# Unlimited depth
 call huntings.find {"query":{"huntingArea.createdBy.createdBy.firstName":"John"}}
 
-# you can go in deep from "manual" to "automatic" and vice versa
+# Combine manual and automatic deep queries
 call huntingAreas.find {"query":{"lastHunting.createdBy.lastName":"Naudotojas"}}
 ```
 
-### How it works
+### How It Works
 
-Simple left-joins are not possible with `DatabaseMixin` as it does not prefix fields with table names. To overcome this, this mixin creates sub-queries with prefixed column names. Prefixes are hided from end user, as you saw from examples.
+Simple left joins are not possible with `DatabaseMixin` because it does not prefix fields with table names. To address this, the `DeepQuery` mixin generates sub-queries with prefixed column names. These prefixes are hidden from the end user, as shown in the examples.
 
-This is example generated SQL
+Here is an example of the generated SQL:
 
 ```sql
-WITH "hunting_area"
-     AS (SELECT "id"              AS "hunting_area_id",
-                "name"            AS "hunting_area_name",
-                "display_name"    AS "hunting_area_display_name",
-                "mpv_id"          AS "hunting_area_mpv_id",
-                "municipality_id" AS "hunting_area_municipality",
-                "tenant_id"       AS "hunting_area_tenant",
-                "created_by"      AS "hunting_area_created_by",
-                "created_at"      AS "hunting_area_created_at",
-                "updated_by"      AS "hunting_area_updated_by",
-                "updated_at"      AS "hunting_area_updated_at",
-                "deleted_by"      AS "hunting_area_deleted_by",
-                "deleted_at"      AS "hunting_area_deleted_at"
-         FROM   "hunting_areas"
-         WHERE  "deleted_at" IS NULL)
+WITH "hunting_area" AS (
+  SELECT
+    "id"              AS "hunting_area_id",
+    "name"            AS "hunting_area_name",
+    "display_name"    AS "hunting_area_display_name",
+    "mpv_id"          AS "hunting_area_mpv_id",
+    "municipality_id" AS "hunting_area_municipality",
+    "tenant_id"       AS "hunting_area_tenant",
+    "created_by"      AS "hunting_area_created_by",
+    "created_at"      AS "hunting_area_created_at",
+    "updated_by"      AS "hunting_area_updated_by",
+    "updated_at"      AS "hunting_area_updated_at",
+    "deleted_by"      AS "hunting_area_deleted_by",
+    "deleted_at"      AS "hunting_area_deleted_at"
+  FROM "hunting_areas"
+  WHERE "deleted_at" IS NULL
+)
 SELECT *
-FROM   "huntings"
-       LEFT JOIN "hunting_area"
-              ON "huntings"."hunting_area_id" = "hunting_area"."hunting_area_id"
-WHERE  ( "deleted_at" IS NULL )
-       AND "hunting_area_municipality" = 33
+FROM "huntings"
+LEFT JOIN "hunting_area"
+  ON "huntings"."hunting_area_id" = "hunting_area"."hunting_area_id"
+WHERE ("deleted_at" IS NULL) AND "hunting_area_municipality" = 33;
 ```
