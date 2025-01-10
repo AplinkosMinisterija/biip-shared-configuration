@@ -5,6 +5,7 @@ import _ from 'lodash';
 import { Context } from 'moleculer';
 // @ts-ignore
 import { Service as DbService } from '@moleculer/database';
+import deepQuery from './deepQuery';
 
 function makeMapping(
   data: any[],
@@ -68,7 +69,10 @@ export function DatabaseMixin(config: Knex.Config, opts: DatabaseMixinOptions) {
   }
 
   const schema: any = {
-    mixins: [DbService(opts)],
+    mixins: [
+      deepQuery(), // TODO: order matters, but it shouldn't! test it, I get errors in other order
+      DbService(opts),
+    ],
 
     actions: {
       ...removeRestActions,
@@ -149,6 +153,16 @@ export function DatabaseMixin(config: Knex.Config, opts: DatabaseMixinOptions) {
         const knex = adapter.client;
         const result = await knex.raw(sql);
         return result.rows;
+      },
+
+      getTableName() {
+        // TODO: adapter.getTableName() or smth, but NOT async (maybe cache somewhere)
+        return opts.collection || this.name;
+      },
+
+      getPrimaryKeyColumnName() {
+        // TODO: filter this.settings.fields by primaryKey: true; return key or columnName
+        return 'id';
       },
     },
     hooks: {
