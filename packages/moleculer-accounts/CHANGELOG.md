@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.4.1
+
+### Patch Changes
+
+- 66cda9b: Prefix all left joined tables
+
 ## 1.4.0
 
 ### Minor Changes
