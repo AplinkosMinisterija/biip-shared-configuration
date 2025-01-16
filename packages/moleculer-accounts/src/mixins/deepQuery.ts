@@ -92,6 +92,8 @@ export function DeepQueryMixin() {
       const knex = adapter.client;
       this.settings.tableName = adapter.opts.tableName;
 
+      const deepPrefix = 'deep_query'; // TODO: allow mixin config? or calculate from table column names
+
       adapter.createQuery = wrap(
         adapter.createQuery,
         (createQuery, params: any, opts: any = {}) => {
@@ -107,7 +109,7 @@ export function DeepQueryMixin() {
               const field = key.split('.')[0];
 
               if (this.settings.fields[field]?.deepQuery) {
-                const newKey = key.replace(/\./g, '_');
+                const newKey = deepPrefix + '_' + key.replace(/\./g, '_');
                 query[newKey] = value;
                 delete query[key];
 
@@ -126,7 +128,7 @@ export function DeepQueryMixin() {
               knex,
               q,
               tableName: snakeCase(this._getTableName()),
-              subTableName: snakeCase(fields[0]),
+              subTableName: deepPrefix + '_' + snakeCase(fields[0]),
               field: fields[0],
               fields,
               depth: 0,
