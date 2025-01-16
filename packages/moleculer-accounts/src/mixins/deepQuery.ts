@@ -179,8 +179,6 @@ export function DeepQueryMixin() {
             this._joinField(params);
           }
 
-          // console.log((q as any).toSQL());
-
           return q;
         },
       );
