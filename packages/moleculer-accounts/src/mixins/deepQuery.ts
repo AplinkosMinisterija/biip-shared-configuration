@@ -22,7 +22,7 @@ export type DeepQuery = {
   withQuery: any;
   getService: (serviceOrName: string | DeepService) => DeepService;
   serviceFields: (serviceOrName: string | DeepService) => Record<string, string>;
-  serviceQuery: (serviceOrName: string | DeepService) => Knex;
+  serviceQuery: (serviceOrName: string | DeepService) => any;
 };
 
 export function DeepQueryMixin() {
@@ -120,7 +120,25 @@ export function DeepQueryMixin() {
           }
           params.query = query;
 
-          const q: Knex = createQuery.call(adapter, params, opts);
+          const qRoot: any = createQuery.call(adapter, params, opts);
+          const q: any = qRoot.clone();
+          qRoot.from(q.as('qDeep'));
+
+          const KNEX_PRESENT_LAYER = ['select', 'columns', 'order', 'limit', 'offset'];
+
+          const KNEX_DATA_LAYER = [
+            'with',
+            'where',
+            'union',
+            'join',
+            'group',
+            'having',
+            'counter',
+            'counters',
+          ];
+
+          KNEX_PRESENT_LAYER.forEach((key: any) => q.clear(key));
+          KNEX_DATA_LAYER.forEach((key: any) => qRoot.clear(key));
 
           for (const fieldString of deepQueriedFields) {
             const fields = fieldString.split('.');
@@ -173,13 +191,17 @@ export function DeepQueryMixin() {
 
             params.serviceQuery = function (serviceOrName: string | any) {
               const service = params.getService(serviceOrName);
-              return service._getServiceQuery(params.knex);
+              const q = service._getServiceQuery(params.knex);
+              q.select(params.serviceFields(service));
+              return q;
             };
 
             this._joinField(params);
           }
+          q.distinctOn('id').orderBy('id', 'asc');
 
-          return q;
+          console.log(qRoot.toString());
+          return qRoot;
         },
       );
     },
