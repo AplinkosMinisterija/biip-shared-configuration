@@ -23,6 +23,7 @@ export type DeepQuery = {
   getService: (serviceOrName: string | DeepService) => DeepService;
   serviceFields: (serviceOrName: string | DeepService) => Record<string, string>;
   serviceQuery: (serviceOrName: string | DeepService) => any;
+  leftJoinService: (serviceOrName: string | DeepService, column1: string, column2: string) => any;
 };
 
 export function DeepQueryMixin() {
@@ -125,7 +126,6 @@ export function DeepQueryMixin() {
           qRoot.from(q.as('qDeep'));
 
           const KNEX_PRESENT_LAYER = ['select', 'columns', 'order', 'limit', 'offset'];
-
           const KNEX_DATA_LAYER = [
             'with',
             'where',
@@ -196,6 +196,16 @@ export function DeepQueryMixin() {
               return q;
             };
 
+            params.leftJoinService = function (serviceOrName, column1, column2) {
+              const subService = params.getService(serviceOrName);
+              const subQuery = params.serviceQuery(subService);
+              params.withQuery(subQuery, column1, column2);
+
+              // Continue recursion
+              params.deeper(subService);
+
+              return subQuery;
+            };
             this._joinField(params);
           }
           q.distinctOn('id').orderBy('id', 'asc');
