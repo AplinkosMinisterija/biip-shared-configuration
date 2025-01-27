@@ -101,7 +101,7 @@ export function DeepQueryMixin() {
           const qRoot: any = createQuery.call(adapter, params, opts);
 
           if (!params?.query) {
-            return qRoot;
+            return createQuery.call(adapter, params, opts);
           }
 
           const deepQueriedFields = new Set<string>();
