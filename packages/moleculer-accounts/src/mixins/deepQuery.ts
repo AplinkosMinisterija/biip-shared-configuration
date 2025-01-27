@@ -22,7 +22,8 @@ export type DeepQuery = {
   withQuery: any;
   getService: (serviceOrName: string | DeepService) => DeepService;
   serviceFields: (serviceOrName: string | DeepService) => Record<string, string>;
-  serviceQuery: (serviceOrName: string | DeepService) => Knex;
+  serviceQuery: (serviceOrName: string | DeepService) => any;
+  leftJoinService: (serviceOrName: string | DeepService, column1: string, column2: string) => any;
 };
 
 export function DeepQueryMixin() {
@@ -97,6 +98,8 @@ export function DeepQueryMixin() {
       adapter.createQuery = wrap(
         adapter.createQuery,
         (createQuery, params: any, opts: any = {}) => {
+          const qRoot: any = createQuery.call(adapter, params, opts);
+
           if (!params?.query) {
             return createQuery.call(adapter, params, opts);
           }
@@ -124,7 +127,23 @@ export function DeepQueryMixin() {
           }
           params.query = query;
 
-          const q: Knex = createQuery.call(adapter, params, opts);
+          const q: any = qRoot.clone();
+          qRoot.from(q.as('qDeep'));
+
+          const KNEX_PRESENT_LAYER = ['select', 'columns', 'order', 'limit', 'offset'];
+          const KNEX_DATA_LAYER = [
+            'with',
+            'where',
+            'union',
+            'join',
+            'group',
+            'having',
+            'counter',
+            'counters',
+          ];
+
+          KNEX_PRESENT_LAYER.forEach((key: any) => q.clear(key));
+          KNEX_DATA_LAYER.forEach((key: any) => qRoot.clear(key));
 
           for (const fieldString of deepQueriedFields) {
             const fields = fieldString.split('.');
@@ -177,13 +196,27 @@ export function DeepQueryMixin() {
 
             params.serviceQuery = function (serviceOrName: string | any) {
               const service = params.getService(serviceOrName);
-              return service._getServiceQuery(params.knex);
+              const q = service._getServiceQuery(params.knex);
+              q.select(params.serviceFields(service));
+              return q;
             };
 
+            params.leftJoinService = function (serviceOrName, column1, column2) {
+              const subService = params.getService(serviceOrName);
+              const subQuery = params.serviceQuery(subService);
+              params.withQuery(subQuery, column1, column2);
+
+              // Continue recursion
+              params.deeper(subService);
+
+              return subQuery;
+            };
             this._joinField(params);
           }
+          q.distinctOn('id').orderBy('id', 'asc');
 
-          return q;
+          console.log(qRoot.toString());
+          return qRoot;
         },
       );
     },
