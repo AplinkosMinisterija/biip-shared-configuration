@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.4.3
+
+### Patch Changes
+
+- af65c00: Fix when no params
+
 ## 1.4.2
 
 ### Patch Changes
