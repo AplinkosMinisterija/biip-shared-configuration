@@ -97,10 +97,8 @@ export function DeepQueryMixin() {
       adapter.createQuery = wrap(
         adapter.createQuery,
         (createQuery, params: any, opts: any = {}) => {
-          const q: Knex = createQuery.call(adapter, params, opts);
-
           if (!params?.query) {
-            return q;
+            return createQuery.call(adapter, params, opts);
           }
 
           const deepQueriedFields = new Set<string>();
@@ -125,6 +123,8 @@ export function DeepQueryMixin() {
             }
           }
           params.query = query;
+
+          const q: Knex = createQuery.call(adapter, params, opts);
 
           for (const fieldString of deepQueriedFields) {
             const fields = fieldString.split('.');
