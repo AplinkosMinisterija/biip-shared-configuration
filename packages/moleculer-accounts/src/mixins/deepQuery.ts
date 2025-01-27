@@ -98,6 +98,12 @@ export function DeepQueryMixin() {
       adapter.createQuery = wrap(
         adapter.createQuery,
         (createQuery, params: any, opts: any = {}) => {
+          const qRoot: any = createQuery.call(adapter, params, opts);
+
+          if (!params?.query) {
+            return qRoot;
+          }
+
           const deepQueriedFields = new Set<string>();
           const query = params?.query ? Object.assign({}, params.query) : {};
 
@@ -121,7 +127,6 @@ export function DeepQueryMixin() {
           }
           params.query = query;
 
-          const qRoot: any = createQuery.call(adapter, params, opts);
           const q: any = qRoot.clone();
           qRoot.from(q.as('qDeep'));
 
