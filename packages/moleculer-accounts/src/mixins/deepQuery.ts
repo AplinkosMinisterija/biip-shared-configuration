@@ -86,6 +86,20 @@ export function DeepQueryMixin() {
         // TODO: filter this.settings.fields by primaryKey: true; return key or columnName
         return 'id';
       },
+
+      _replaceQueryKey(key: string) {
+        if (!key.includes('.')) {
+          return key;
+        }
+
+        const field = key.split('.')[0];
+
+        if (!this.settings.fields[field]?.deepQuery) {
+          return key;
+        }
+
+        return key.replace(/\./g, '_');
+      },
     },
 
     async started() {
@@ -110,17 +124,15 @@ export function DeepQueryMixin() {
            * query[subColumn.field] => query[subColumn_field]
            */
           for (const [key, value] of Object.entries(query)) {
-            if (key.includes('.')) {
-              const field = key.split('.')[0];
+            const deepKey = this._replaceQueryKey(key);
+            if (key !== deepKey) {
+              const newKey = deepPrefix + '_' + deepKey;
 
-              if (this.settings.fields[field]?.deepQuery) {
-                const newKey = deepPrefix + '_' + key.replace(/\./g, '_');
-                query[newKey] = value;
-                delete query[key];
+              query[newKey] = value;
+              delete query[key];
 
-                const deepField = key.substring(0, key.lastIndexOf('.'));
-                deepQueriedFields.add(deepField);
-              }
+              const deepField = key.substring(0, key.lastIndexOf('.'));
+              deepQueriedFields.add(deepField);
             }
           }
 
