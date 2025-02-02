@@ -98,8 +98,6 @@ export function DeepQueryMixin() {
       adapter.createQuery = wrap(
         adapter.createQuery,
         (createQuery, params: any, opts: any = {}) => {
-          const qRoot: any = createQuery.call(adapter, params, opts);
-
           if (!params?.query) {
             return createQuery.call(adapter, params, opts);
           }
@@ -125,8 +123,10 @@ export function DeepQueryMixin() {
               }
             }
           }
+
           params.query = query;
 
+          const qRoot: any = createQuery.call(adapter, params, opts);
           const q: any = qRoot.clone();
           qRoot.from(q.as('qDeep'));
 
