@@ -147,7 +147,7 @@ export function DeepQueryMixin() {
 
           for (const fieldString of deepQueriedFields) {
             const fields = fieldString.split('.');
-            const params: Partial<DeepQuery> = {
+            const joinParms: Partial<DeepQuery> = {
               knex,
               q,
               tableName: snakeCase(this._getTableName()),
@@ -157,61 +157,61 @@ export function DeepQueryMixin() {
               depth: 0,
             };
 
-            params.withQuery = function (subQ: Knex, column1: string, column2: string) {
-              q.with(params.subTableName, subQ);
-              q.leftJoin(params.subTableName, function () {
+            joinParms.withQuery = function (subQ: Knex, column1: string, column2: string) {
+              q.with(joinParms.subTableName, subQ);
+              q.leftJoin(joinParms.subTableName, function () {
                 this.on(
-                  `${params.tableName}.${
-                    params.depth > 0 ? `${params.tableName}_${column1}` : column1
+                  `${joinParms.tableName}.${
+                    joinParms.depth > 0 ? `${joinParms.tableName}_${column1}` : column1
                   }`,
                   '=',
-                  `${params.subTableName}.${params.subTableName}_${column2}`,
+                  `${joinParms.subTableName}.${joinParms.subTableName}_${column2}`,
                 );
               });
             };
 
-            params.deeper = function (serviceOrName: string | any) {
-              if (params.fields.length) {
-                const service = params.getService(serviceOrName);
+            joinParms.deeper = function (serviceOrName: string | any) {
+              if (joinParms.fields.length) {
+                const service = joinParms.getService(serviceOrName);
 
-                params.field = fields[0];
-                params.tableName = params.subTableName;
-                params.subTableName = `${params.subTableName}_${params.fields[0]}`;
-                params.depth += 1;
+                joinParms.field = fields[0];
+                joinParms.tableName = joinParms.subTableName;
+                joinParms.subTableName = `${joinParms.subTableName}_${joinParms.fields[0]}`;
+                joinParms.depth += 1;
 
-                service._joinField(params);
+                service._joinField(joinParms);
               }
             };
 
-            params.getService = (serviceOrName: string | any) => {
+            joinParms.getService = (serviceOrName: string | any) => {
               return typeof serviceOrName === 'string'
                 ? this.broker.getLocalService(serviceOrName)
                 : serviceOrName;
             };
 
-            params.serviceFields = function (serviceOrName: string | any) {
-              const service = params.getService(serviceOrName);
-              return service._getSelectFields(`${params.subTableName}_`);
+            joinParms.serviceFields = function (serviceOrName: string | any) {
+              const service = joinParms.getService(serviceOrName);
+              return service._getSelectFields(`${joinParms.subTableName}_`);
             };
 
-            params.serviceQuery = function (serviceOrName: string | any) {
-              const service = params.getService(serviceOrName);
-              const q = service._getServiceQuery(params.knex);
-              q.select(params.serviceFields(service));
+            joinParms.serviceQuery = function (serviceOrName: string | any) {
+              const service = joinParms.getService(serviceOrName);
+              const q = service._getServiceQuery(joinParms.knex);
+              q.select(joinParms.serviceFields(service));
               return q;
             };
 
-            params.leftJoinService = function (serviceOrName, column1, column2) {
-              const subService = params.getService(serviceOrName);
-              const subQuery = params.serviceQuery(subService);
-              params.withQuery(subQuery, column1, column2);
+            joinParms.leftJoinService = function (serviceOrName, column1, column2) {
+              const subService = joinParms.getService(serviceOrName);
+              const subQuery = joinParms.serviceQuery(subService);
+              joinParms.withQuery(subQuery, column1, column2);
 
               // Continue recursion
-              params.deeper(subService);
+              joinParms.deeper(subService);
 
               return subQuery;
             };
-            this._joinField(params);
+            this._joinField(joinParms);
           }
           q.distinctOn('id').orderBy('id', 'asc');
 
