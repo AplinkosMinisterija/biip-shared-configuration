@@ -33,26 +33,11 @@ export function DeepQueryMixin() {
       _joinField(params: DeepQuery) {
         const { fields, deeper, withQuery, serviceQuery, serviceFields, getService } = params;
         const field = fields.shift();
-        const fieldSettings = this.settings.fields[field];
+        const { service, handler } = this._getDeepConfigByField(field);
 
-        switch (typeof fieldSettings.deepQuery) {
-          case 'string':
-            const subService = getService(fieldSettings.deepQuery);
-            const column = this.settings.fields[field]?.columnName || field;
-            const subColumn = subService._getPrimaryKeyColumnName();
-
-            const subQuery = serviceQuery(subService);
-            subQuery.select(serviceFields(subService));
-            withQuery(subQuery, column, subColumn);
-
-            // continue recursion
-            deeper(subService);
-
-            break;
-
-          case 'function':
-            fieldSettings.deepQuery(params);
-            break;
+        handler(params);
+        if (service) {
+          deeper(service);
         }
       },
 
@@ -85,6 +70,44 @@ export function DeepQueryMixin() {
       _getPrimaryKeyColumnName() {
         // TODO: filter this.settings.fields by primaryKey: true; return key or columnName
         return 'id';
+      },
+
+      _getDeepConfigByField(field: string) {
+        let service: string, handler: (params: DeepQuery) => void;
+
+        let config = this.settings.fields[field]?.deepQuery;
+
+        switch (typeof config) {
+          case 'string':
+            service = config;
+            break;
+
+          case 'function':
+            handler = config;
+            break;
+
+          case 'object':
+            service = config.service;
+            handler = config.handler;
+            break;
+        }
+
+        if (!handler && service) {
+          handler = ({ withQuery, serviceQuery, serviceFields, getService }) => {
+            const subService = getService(service);
+            const column = this.settings.fields[field]?.columnName || field;
+            const subColumn = subService._getPrimaryKeyColumnName();
+
+            const subQuery = serviceQuery(subService);
+            subQuery.select(serviceFields(subService));
+            withQuery(subQuery, column, subColumn);
+          };
+        }
+
+        return {
+          service,
+          handler,
+        };
       },
 
       _replaceQueryKey(key: string) {
