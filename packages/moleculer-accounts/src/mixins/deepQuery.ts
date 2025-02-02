@@ -72,6 +72,10 @@ export function DeepQueryMixin() {
         return 'id';
       },
 
+      _isFieldDeep(field: string) {
+        return !!this.settings.fields[field]?.deepQuery;
+      },
+
       _getDeepConfigByField(field: string) {
         let service: string, handler: (params: DeepQuery) => void;
 
@@ -115,13 +119,19 @@ export function DeepQueryMixin() {
           return key;
         }
 
-        const field = key.split('.')[0];
-
-        if (!this.settings.fields[field]?.deepQuery) {
+        const [field, ...restOfKeyParts] = key.split('.');
+        if (!this._isFieldDeep(field)) {
           return key;
         }
 
-        return key.replace(/\./g, '_');
+        const { service } = this._getDeepConfigByField(field);
+        let restKey = restOfKeyParts.join('.');
+
+        if (service?.replaceQueryKey) {
+          restKey = service.replaceQueryKey(restKey);
+        }
+
+        return `${field}_${restKey}`;
       },
     },
 
@@ -240,9 +250,6 @@ export function DeepQueryMixin() {
               const subService = joinParms.getService(serviceOrName);
               const subQuery = joinParms.serviceQuery(subService);
               joinParms.withQuery(subQuery, column1, column2);
-
-              // Continue recursion
-              joinParms.deeper(subService);
 
               return subQuery;
             };
