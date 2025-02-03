@@ -31,9 +31,9 @@ export function DeepQueryMixin() {
     methods: {
       // RECURSIVE!!!
       _joinField(params: DeepQuery) {
-        const { fields, deeper, withQuery, serviceQuery, serviceFields, getService } = params;
+        const { fields, deeper } = params;
         const field = fields.shift();
-        const { service, handler } = this._getDeepConfigByField(field);
+        let { service, handler } = this._getDeepConfigByField(field);
 
         handler(params);
         if (service) {
@@ -77,7 +77,7 @@ export function DeepQueryMixin() {
       },
 
       _getDeepConfigByField(field: string) {
-        let service: string, handler: (params: DeepQuery) => void;
+        let service: string | any, handler: (params: DeepQuery) => void;
 
         let config = this.settings.fields[field]?.deepQuery;
 
@@ -96,15 +96,17 @@ export function DeepQueryMixin() {
             break;
         }
 
+        if (typeof service === 'string') {
+          service = this.broker.getLocalService(service);
+        }
+
         if (!handler && service) {
-          handler = ({ withQuery, serviceQuery, serviceFields, getService }) => {
+          handler = ({ leftJoinService, getService }) => {
             const subService = getService(service);
             const column = this.settings.fields[field]?.columnName || field;
             const subColumn = subService._getPrimaryKeyColumnName();
 
-            const subQuery = serviceQuery(subService);
-            subQuery.select(serviceFields(subService));
-            withQuery(subQuery, column, subColumn);
+            leftJoinService(subService, column, subColumn);
           };
         }
 
@@ -127,8 +129,8 @@ export function DeepQueryMixin() {
         const { service } = this._getDeepConfigByField(field);
         let restKey = restOfKeyParts.join('.');
 
-        if (service?.replaceQueryKey) {
-          restKey = service.replaceQueryKey(restKey);
+        if (service?._replaceQueryKey) {
+          restKey = service._replaceQueryKey(restKey);
         }
 
         return `${field}_${restKey}`;
