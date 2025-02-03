@@ -160,7 +160,7 @@ export function DeepQueryMixin() {
           return [this._columnName(key), this.settings.fields[key]];
         }
 
-        let [field, ...restOfKeyParts] = key.split('.');
+        const [field, ...restOfKeyParts] = key.split('.');
         if (!this._isFieldDeep(field)) {
           return [this._columnName(key), this.settings.fields[key]];
         }
