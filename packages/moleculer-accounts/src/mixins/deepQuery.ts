@@ -1,13 +1,41 @@
 'use strict';
 
 import { Knex } from 'knex';
-import { snakeCase, wrap } from 'lodash';
+import { isObject, snakeCase, wrap } from 'lodash';
+
+// @ts-ignore
+import mToPsql from 'mongo-query-to-postgres-jsonb';
+
+type rawStatementSanitized = { condition: string; bindings?: unknown[] };
+type rawStatement = string | rawStatementSanitized;
+
+function sanitizeRaw(statement: rawStatement): rawStatementSanitized {
+  return {
+    condition: typeof statement === 'string' ? statement : statement.condition,
+    bindings: typeof statement === 'string' ? [] : statement.bindings || [],
+  };
+}
+
+export function mergeRaw(extend: rawStatement, base?: rawStatement): rawStatement {
+  if (!base) {
+    return extend;
+  }
+
+  base = sanitizeRaw(base);
+  extend = sanitizeRaw(extend);
+
+  return {
+    condition: `(${base.condition}) AND (${extend.condition})`,
+    bindings: [...base.bindings, ...extend.bindings],
+  };
+}
 
 export type DeepService = {
   _joinField: any;
   _getPrimaryKeyColumnName: any;
   _getSelectFields: any;
   _getServiceQuery: (knex: any) => Knex;
+  _columnName: (field: string) => string;
 };
 
 export type DeepQuery = {
@@ -18,53 +46,45 @@ export type DeepQuery = {
   fields: string[];
   field: string;
   depth: number;
-  deeper: any;
-  withQuery: any;
+  withQuery: (subQ: Knex, column1: string, column2: string) => void;
   getService: (serviceOrName: string | DeepService) => DeepService;
   serviceFields: (serviceOrName: string | DeepService) => Record<string, string>;
-  serviceQuery: (serviceOrName: string | DeepService) => Knex;
+  serviceQuery: (serviceOrName: string | DeepService) => any;
+  leftJoinService: (serviceOrName: string | DeepService, column1: string, column2: string) => any;
 };
 
 export function DeepQueryMixin() {
   const schema = {
     methods: {
       // RECURSIVE!!!
-      _joinField(params: DeepQuery) {
-        const { fields, deeper, withQuery, serviceQuery, serviceFields, getService } = params;
+      _joinField(joinParms: DeepQuery) {
+        const { fields } = joinParms;
         const field = fields.shift();
-        const fieldSettings = this.settings.fields[field];
+        let { service, handler } = this._getDeepConfigByField(field);
 
-        switch (typeof fieldSettings.deepQuery) {
-          case 'string':
-            const subService = getService(fieldSettings.deepQuery);
-            const column = this.settings.fields[field]?.columnName || field;
-            const subColumn = subService._getPrimaryKeyColumnName();
+        if (handler) {
+          handler(joinParms);
+        }
 
-            const subQuery = serviceQuery(subService);
-            subQuery.select(serviceFields(subService));
-            withQuery(subQuery, column, subColumn);
+        if (service && fields.length) {
+          joinParms.field = fields[0];
+          joinParms.tableName = joinParms.subTableName;
+          joinParms.subTableName = `${joinParms.subTableName}_${service._columnName(
+            joinParms.fields[0],
+          )}`;
+          joinParms.depth += 1;
 
-            // continue recursion
-            deeper(subService);
-
-            break;
-
-          case 'function':
-            fieldSettings.deepQuery(params);
-            break;
+          service._joinField(joinParms);
         }
       },
 
       _getSelectFields(prefix: string) {
         const fields = Object.keys(this.settings.fields)
           .filter((field) => !this.settings.fields[field].virtual)
-          .map((field) => ({
-            field: field,
-            column: this.settings.fields[field].columnName || field,
-          }));
+          .map((field) => this.settings.fields[field].columnName || field);
 
-        return fields.reduce<Record<string, string>>((acc, curr) => {
-          acc[`${prefix}${curr.field}`] = curr.column;
+        return fields.reduce<Record<string, string>>((acc, column) => {
+          acc[`${prefix}${column}`] = column;
           return acc;
         }, {});
       },
@@ -84,6 +104,109 @@ export function DeepQueryMixin() {
       _getPrimaryKeyColumnName() {
         // TODO: filter this.settings.fields by primaryKey: true; return key or columnName
         return 'id';
+      },
+
+      _isFieldDeep(field: string) {
+        return !!this.settings.fields[field]?.deepQuery;
+      },
+
+      _getDeepConfigByField(field: string) {
+        let service: string | any, handler: (params: DeepQuery) => void;
+
+        let config = this.settings.fields[field]?.deepQuery;
+
+        switch (typeof config) {
+          case 'string':
+            service = config;
+            break;
+
+          case 'function':
+            handler = config;
+            break;
+
+          case 'object':
+            service = config.service;
+            handler = config.handler;
+            break;
+        }
+
+        if (typeof service === 'string') {
+          service = this.broker.getLocalService(service);
+        }
+
+        if (!handler && service) {
+          handler = ({ leftJoinService, getService }) => {
+            const subService = getService(service);
+            const column = this.settings.fields[field]?.columnName || field;
+            const subColumn = subService._getPrimaryKeyColumnName();
+
+            leftJoinService(subService, column, subColumn);
+          };
+        }
+
+        return {
+          service,
+          handler,
+        };
+      },
+
+      _columnName(field: string) {
+        const config = this.settings.fields[field];
+        return config?.columnName || field;
+      },
+
+      _replaceQueryKey(key: string) {
+        if (!key.includes('.')) {
+          return [this._columnName(key), this.settings.fields[key]];
+        }
+
+        const [field, ...restOfKeyParts] = key.split('.');
+        if (!this._isFieldDeep(field)) {
+          return [this._columnName(key), this.settings.fields[key]];
+        }
+
+        const { service } = this._getDeepConfigByField(field);
+        let restKey = restOfKeyParts.join('.');
+        let config = this.settings.fields[key];
+
+        if (service?._replaceQueryKey) {
+          [restKey, config] = service._replaceQueryKey(restKey);
+        }
+
+        return [`${this._columnName(field)}_${restKey}`, config];
+      },
+
+      // JSONB
+      _schemaArrayFields(fieldSchema: any, parents: string[] = []) {
+        const arrayFields: string[] = [];
+
+        if (!fieldSchema) {
+          return arrayFields;
+        }
+
+        const fieldType = typeof fieldSchema === 'string' ? fieldSchema : fieldSchema.type;
+
+        switch (fieldType) {
+          case 'object': {
+            const properties = fieldSchema?.properties || {};
+
+            for (const key in properties) {
+              const subFieldSchema = properties[key];
+              const subParents = [...parents, key];
+              const subArrayFields = this._schemaArrayFields(subFieldSchema, subParents);
+
+              arrayFields.push(...subArrayFields);
+            }
+
+            break;
+          }
+
+          case 'array': {
+            arrayFields.push(parents.join('.'));
+          }
+        }
+
+        return arrayFields;
       },
     },
 
@@ -109,81 +232,135 @@ export function DeepQueryMixin() {
            * query[subColumn.field] => query[subColumn_field]
            */
           for (const [key, value] of Object.entries(query)) {
-            if (key.includes('.')) {
-              const field = key.split('.')[0];
+            let [newKey, fieldConfig] = this._replaceQueryKey(key);
 
-              if (this.settings.fields[field]?.deepQuery) {
-                const newKey = deepPrefix + '_' + key.replace(/\./g, '_');
-                query[newKey] = value;
-                delete query[key];
+            if (key !== newKey) {
+              newKey = deepPrefix + '_' + newKey;
 
-                const deepField = key.substring(0, key.lastIndexOf('.'));
-                deepQueriedFields.add(deepField);
+              query[newKey] = value;
+              delete query[key];
+
+              const deepField = key.substring(0, key.lastIndexOf('.'));
+              deepQueriedFields.add(deepField);
+            }
+
+            // JSON query
+            if (['array', 'object'].includes(fieldConfig?.type) && isObject(value)) {
+              delete query[newKey];
+
+              const snakeCaseFieldKey = snakeCase(newKey);
+              let condition: string = '';
+              switch (fieldConfig.type) {
+                case 'array':
+                  const subCondition = mToPsql(
+                    `${snakeCaseFieldKey}_elem`,
+                    value,
+                    this._schemaArrayFields(fieldConfig?.items),
+                  );
+                  condition = `EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(${snakeCaseFieldKey}) AS ${snakeCaseFieldKey}_elem
+    WHERE ${subCondition}
+)`;
+                  break;
+
+                case 'object':
+                  condition = mToPsql(
+                    snakeCaseFieldKey,
+                    value,
+                    this._schemaArrayFields(fieldConfig),
+                  );
+                  break;
               }
+
+              query.$raw = mergeRaw(
+                {
+                  condition,
+                  bindings: [],
+                },
+                query?.$raw,
+              );
             }
           }
+
           params.query = query;
 
-          const q: Knex = createQuery.call(adapter, params, opts);
+          const qRoot: any = createQuery.call(adapter, params, opts);
+          const q: any = qRoot.clone();
+          qRoot.from(q.as('qDeep'));
+
+          const KNEX_PRESENT_LAYER = ['select', 'columns', 'order', 'limit', 'offset'];
+          const KNEX_DATA_LAYER = [
+            'with',
+            'where',
+            'union',
+            'join',
+            'group',
+            'having',
+            'counter',
+            'counters',
+          ];
+
+          KNEX_PRESENT_LAYER.forEach((key: any) => q.clear(key));
+          KNEX_DATA_LAYER.forEach((key: any) => qRoot.clear(key));
 
           for (const fieldString of deepQueriedFields) {
             const fields = fieldString.split('.');
-            const params: Partial<DeepQuery> = {
+            const joinParms: Partial<DeepQuery> = {
               knex,
               q,
               tableName: snakeCase(this._getTableName()),
-              subTableName: deepPrefix + '_' + snakeCase(fields[0]),
+              subTableName: deepPrefix + '_' + snakeCase(this._columnName(fields[0])),
               field: fields[0],
               fields,
               depth: 0,
             };
 
-            params.withQuery = function (subQ: Knex, column1: string, column2: string) {
-              q.with(params.subTableName, subQ);
-              q.leftJoin(params.subTableName, function () {
+            joinParms.withQuery = function (subQ: Knex, column1: string, column2: string) {
+              q.with(joinParms.subTableName, subQ);
+              q.leftJoin(joinParms.subTableName, function () {
                 this.on(
-                  `${params.tableName}.${
-                    params.depth > 0 ? `${params.tableName}_${column1}` : column1
+                  `${joinParms.tableName}.${
+                    joinParms.depth > 0 ? `${joinParms.tableName}_${column1}` : column1
                   }`,
                   '=',
-                  `${params.subTableName}.${params.subTableName}_${column2}`,
+                  `${joinParms.subTableName}.${joinParms.subTableName}_${column2}`,
                 );
               });
             };
 
-            params.deeper = function (serviceOrName: string | any) {
-              if (params.fields.length) {
-                const service = params.getService(serviceOrName);
-
-                params.field = fields[0];
-                params.tableName = params.subTableName;
-                params.subTableName = `${params.subTableName}_${params.fields[0]}`;
-                params.depth += 1;
-
-                service._joinField(params);
-              }
-            };
-
-            params.getService = (serviceOrName: string | any) => {
+            joinParms.getService = (serviceOrName: string | any) => {
               return typeof serviceOrName === 'string'
                 ? this.broker.getLocalService(serviceOrName)
                 : serviceOrName;
             };
 
-            params.serviceFields = function (serviceOrName: string | any) {
-              const service = params.getService(serviceOrName);
-              return service._getSelectFields(`${params.subTableName}_`);
+            joinParms.serviceFields = function (serviceOrName: string | any) {
+              const service = joinParms.getService(serviceOrName);
+              return service._getSelectFields(`${joinParms.subTableName}_`);
             };
 
-            params.serviceQuery = function (serviceOrName: string | any) {
-              const service = params.getService(serviceOrName);
-              return service._getServiceQuery(params.knex);
+            joinParms.serviceQuery = function (serviceOrName: string | any) {
+              const service = joinParms.getService(serviceOrName);
+              const q = service._getServiceQuery(joinParms.knex);
+              q.select(joinParms.serviceFields(service));
+              return q;
             };
 
-            this._joinField(params);
+            joinParms.leftJoinService = function (serviceOrName, column1, column2) {
+              const subService = joinParms.getService(serviceOrName);
+              const subQuery = joinParms.serviceQuery(subService);
+              joinParms.withQuery(subQuery, column1, column2);
+
+              return subQuery;
+            };
+
+            this._joinField(joinParms);
           }
 
-          return q;
+          q.distinctOn('id').orderBy('id', 'asc');
+
+          return qRoot;
         },
       );
     },

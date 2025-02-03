@@ -2506,6 +2506,11 @@ moleculer@^0.14.31:
     node-fetch "^2.6.7"
     recursive-watch "^1.1.4"
 
+mongo-query-to-postgres-jsonb@^0.2.17:
+  version "0.2.17"
+  resolved "https://registry.yarnpkg.com/mongo-query-to-postgres-jsonb/-/mongo-query-to-postgres-jsonb-0.2.17.tgz#e4b61bd97abd172293444fd1c1d63ae642607358"
+  integrity sha512-LZXG9l9oikhZmnoexCzwlg2fmVKzV2478gt5SMS6nDJKwz5X7dmg7JXzO1RQ5ffuJ026dZIAwREk44NcXB2dDw==
+
 mri@1.1.4:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/mri/-/mri-1.1.4.tgz#7cb1dd1b9b40905f1fac053abe25b6720f44744a"
