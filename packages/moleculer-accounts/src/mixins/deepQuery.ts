@@ -44,13 +44,10 @@ export function DeepQueryMixin() {
       _getSelectFields(prefix: string) {
         const fields = Object.keys(this.settings.fields)
           .filter((field) => !this.settings.fields[field].virtual)
-          .map((field) => ({
-            field: field,
-            column: this.settings.fields[field].columnName || field,
-          }));
+          .map((field) => this.settings.fields[field].columnName || field);
 
-        return fields.reduce<Record<string, string>>((acc, curr) => {
-          acc[`${prefix}${curr.column}`] = curr.column;
+        return fields.reduce<Record<string, string>>((acc, column) => {
+          acc[`${prefix}${column}`] = column;
           return acc;
         }, {});
       },
