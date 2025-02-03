@@ -50,7 +50,7 @@ export function DeepQueryMixin() {
           }));
 
         return fields.reduce<Record<string, string>>((acc, curr) => {
-          acc[`${prefix}${curr.field}`] = curr.column;
+          acc[`${prefix}${curr.column}`] = curr.column;
           return acc;
         }, {});
       },
@@ -116,14 +116,19 @@ export function DeepQueryMixin() {
         };
       },
 
+      _columnName(field: string) {
+        let config = this.settings.fields[field];
+        return config?.columnName || field;
+      },
+
       _replaceQueryKey(key: string) {
         if (!key.includes('.')) {
-          return key;
+          return this._columnName(key);
         }
 
-        const [field, ...restOfKeyParts] = key.split('.');
+        let [field, ...restOfKeyParts] = key.split('.');
         if (!this._isFieldDeep(field)) {
-          return key;
+          return this._columnName(key);
         }
 
         const { service } = this._getDeepConfigByField(field);
@@ -133,7 +138,7 @@ export function DeepQueryMixin() {
           restKey = service._replaceQueryKey(restKey);
         }
 
-        return `${field}_${restKey}`;
+        return `${this._columnName(field)}_${restKey}`;
       },
     },
 
@@ -198,7 +203,7 @@ export function DeepQueryMixin() {
               knex,
               q,
               tableName: snakeCase(this._getTableName()),
-              subTableName: deepPrefix + '_' + snakeCase(fields[0]),
+              subTableName: deepPrefix + '_' + snakeCase(this._columnName(fields[0])),
               field: fields[0],
               fields,
               depth: 0,
@@ -223,7 +228,9 @@ export function DeepQueryMixin() {
 
                 joinParms.field = fields[0];
                 joinParms.tableName = joinParms.subTableName;
-                joinParms.subTableName = `${joinParms.subTableName}_${joinParms.fields[0]}`;
+                joinParms.subTableName = `${joinParms.subTableName}_${(service as any)._columnName(
+                  joinParms.fields[0],
+                )}`;
                 joinParms.depth += 1;
 
                 service._joinField(joinParms);
@@ -255,6 +262,7 @@ export function DeepQueryMixin() {
 
               return subQuery;
             };
+
             this._joinField(joinParms);
           }
           q.distinctOn('id').orderBy('id', 'asc');
