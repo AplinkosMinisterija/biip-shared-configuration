@@ -238,8 +238,6 @@ export function DeepQueryMixin() {
             if (['array', 'object'].includes(fieldConfig?.type) && isObject(value)) {
               delete query[newKey];
 
-              console.log('GI BUVOOOO');
-
               const snakeCaseFieldKey = snakeCase(newKey);
               let condition: string = '';
               switch (fieldConfig.type) {
@@ -366,7 +364,6 @@ export function DeepQueryMixin() {
           }
           q.distinctOn('id').orderBy('id', 'asc');
 
-          console.log(qRoot.toString());
           return qRoot;
         },
       );
