@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.5.0
+
+### Minor Changes
+
+- b3abb34: Deep query jsonb fields.
+
 ## 1.4.3
 
 ### Patch Changes
