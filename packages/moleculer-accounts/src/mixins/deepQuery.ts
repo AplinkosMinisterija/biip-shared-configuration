@@ -35,6 +35,7 @@ export type DeepService = {
   _getPrimaryKeyColumnName: any;
   _getSelectFields: any;
   _getServiceQuery: (knex: any) => Knex;
+  _columnName: (field: string) => string;
 };
 
 export type DeepQuery = {
@@ -328,7 +329,7 @@ export function DeepQueryMixin() {
 
                 joinParms.field = fields[0];
                 joinParms.tableName = joinParms.subTableName;
-                joinParms.subTableName = `${joinParms.subTableName}_${(service as any)._columnName(
+                joinParms.subTableName = `${joinParms.subTableName}_${service._columnName(
                   joinParms.fields[0],
                 )}`;
                 joinParms.depth += 1;
