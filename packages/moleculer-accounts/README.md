@@ -208,7 +208,7 @@ fields: {
     type: 'object',
     // properties are REQUIRED this time, if you want to be able to query by array fields (and deeper)
     properties: {
-//      street: 'string', // <-- not required, not array
+ //      street: 'string', // <-- not required, not array
  //     city: 'string',
       phoneNumbers: {
         type: 'array',
@@ -216,8 +216,4 @@ fields: {
     },
   },
 }
-```
-
-```
-
 ```
