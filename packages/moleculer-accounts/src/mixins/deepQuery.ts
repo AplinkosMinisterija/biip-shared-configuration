@@ -151,7 +151,7 @@ export function DeepQueryMixin() {
       },
 
       _columnName(field: string) {
-        let config = this.settings.fields[field];
+        const config = this.settings.fields[field];
         return config?.columnName || field;
       },
 
