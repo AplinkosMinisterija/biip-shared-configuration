@@ -61,30 +61,31 @@ The most challenging part is prefixing all fields correctly. Here are some examp
 
 ```js
 fields: {
+  // one to one
   tenant: {
     type: 'number',
     columnType: 'integer',
-    deepQuery({
-      getService,
-      field,
-      serviceQuery,
-      serviceFields,
-      withQuery,
-      deeper,
-    }: DeepQuery) {
-      const subService = getService('tenants');
-      const column = this.settings.fields[field]?.columnName || field;
-      const subColumn = subService.getIdColumnName();
-
-      const subQuery = serviceQuery(subService);
-      subQuery.select(serviceFields(subService));
-      withQuery(subQuery, column, subColumn);
-
-      // Continue recursion
-      deeper(subService);
+    deepQuery: {
+      // Optional: providing service name continues recursion deeper
+      service: 'tenants',
+      handler({ leftJoinService }: DeepQuery) {
+        leftJoinService('tenants', 'tenant', 'id');
+      },
     },
   },
 
+  // one to many
+  huntings: {
+    virtual: true,
+    deepQuery: {
+      service: 'huntings',
+      handler({ leftJoinService }: DeepQuery) {
+        leftJoinService('huntings', 'id', 'huntingAreaId');
+      },
+    },
+  },
+
+  // one to one "custom" select (could be done easier with helpers like `withQuery` and others)
   lastHunting: {
     virtual: true,
     deepQuery({ knex, subTableName, tableName, q, deeper }: DeepQuery) {
@@ -103,9 +104,6 @@ ORDER BY hunting_area_id, id DESC`)
           `${subTableName}.${subTableName}_hunting_area`
         );
       });
-
-      // OPTIONAL: Continue recursion
-      deeper('huntings');
     },
   }
 }
@@ -160,3 +158,63 @@ LEFT JOIN "hunting_area"
   ON "huntings"."hunting_area_id" = "hunting_area"."hunting_area_id"
 WHERE ("deleted_at" IS NULL) AND "hunting_area_municipality" = 33;
 ```
+
+### Querying `jsonb` fields
+
+`DeepQuery` mixin supports querying `jsonb` fields. Field must have `object` or `array` type. Deeper structure description is optional except for cases with arrays - mixin needs to know which properties are array type (in any depth). Querying is done by providing object - imagine `jsonb` field as MongoDB document, and query values as MongoDB query.
+
+#### Examples
+
+```js
+fields: {
+  address: {
+    type: 'object',
+    // properties are OPTIONAL for this functionality in this case, no arrays in any depth
+    properties: {
+      street: 'string',
+      city: 'string',
+      phone: {
+        type: 'object',
+        properties: {
+          number: 'string',
+          countryCode: 'string',
+        },
+      }
+    },
+  },
+}
+```
+
+```bash
+call users.find {"query":{"address":{"city":"Vilnius"}}}
+
+# deeper query
+call users.find {"query":{"address":{"phone.countryCode":"+370"}}}
+
+# mongodb operators
+call users.find {"query":{"address":{"phone.countryCode":{"$in":["+370","+371"]}}}}
+
+# deepQuery first - jsonb next
+call tenants.find {"query":{"craetedBy.address":{"phone.countryCode":{"$in":["+370","+371"]}}}}
+```
+
+#### Array
+
+As said earlier, deeper structure description is required for arrays. This is because the mixin needs to know which properties are array type (in any depth).
+
+````js
+fields: {
+  address: {
+    type: 'object',
+    // properties are REQUIRED this time, if you want to be able to query by array fields (and deeper)
+    properties: {
+//      street: 'string', // <-- not required, not array
+ //     city: 'string',
+      phoneNumbers: {
+        type: 'array',
+      }
+    },
+  },
+}
+```js
+````
