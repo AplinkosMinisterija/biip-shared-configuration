@@ -1,7 +1,34 @@
 'use strict';
 
 import { Knex } from 'knex';
-import { snakeCase, wrap } from 'lodash';
+import { isObject, snakeCase, wrap } from 'lodash';
+
+// @ts-ignore
+import mToPsql from 'mongo-query-to-postgres-jsonb';
+
+type rawStatementSanitized = { condition: string; bindings?: unknown[] };
+type rawStatement = string | rawStatementSanitized;
+
+function sanitizeRaw(statement: rawStatement): rawStatementSanitized {
+  return {
+    condition: typeof statement === 'string' ? statement : statement.condition,
+    bindings: typeof statement === 'string' ? [] : statement.bindings || [],
+  };
+}
+
+export function mergeRaw(extend: rawStatement, base?: rawStatement): rawStatement {
+  if (!base) {
+    return extend;
+  }
+
+  base = sanitizeRaw(base);
+  extend = sanitizeRaw(extend);
+
+  return {
+    condition: `(${base.condition}) AND (${extend.condition})`,
+    bindings: [...base.bindings, ...extend.bindings],
+  };
+}
 
 export type DeepService = {
   _joinField: any;
@@ -120,22 +147,56 @@ export function DeepQueryMixin() {
 
       _replaceQueryKey(key: string) {
         if (!key.includes('.')) {
-          return this._columnName(key);
+          return [this._columnName(key), this.settings.fields[key]];
         }
 
         let [field, ...restOfKeyParts] = key.split('.');
         if (!this._isFieldDeep(field)) {
-          return this._columnName(key);
+          return [this._columnName(key), this.settings.fields[key]];
         }
 
         const { service } = this._getDeepConfigByField(field);
         let restKey = restOfKeyParts.join('.');
+        let config = this.settings.fields[key];
 
         if (service?._replaceQueryKey) {
-          restKey = service._replaceQueryKey(restKey);
+          [restKey, config] = service._replaceQueryKey(restKey);
         }
 
-        return `${this._columnName(field)}_${restKey}`;
+        return [`${this._columnName(field)}_${restKey}`, config];
+      },
+
+      // JSONB
+      _schemaArrayFields(fieldSchema: any, parents: string[] = []) {
+        const arrayFields: string[] = [];
+
+        if (!fieldSchema) {
+          return arrayFields;
+        }
+
+        const fieldType = typeof fieldSchema === 'string' ? fieldSchema : fieldSchema.type;
+
+        switch (fieldType) {
+          case 'object': {
+            const properties = fieldSchema?.properties || {};
+
+            for (const key in properties) {
+              const subFieldSchema = properties[key];
+              const subParents = [...parents, key];
+              const subArrayFields = this._schemaArrayFields(subFieldSchema, subParents);
+
+              arrayFields.push(...subArrayFields);
+            }
+
+            break;
+          }
+
+          case 'array': {
+            arrayFields.push(parents.join('.'));
+          }
+        }
+
+        return arrayFields;
       },
     },
 
@@ -161,15 +222,56 @@ export function DeepQueryMixin() {
            * query[subColumn.field] => query[subColumn_field]
            */
           for (const [key, value] of Object.entries(query)) {
-            const deepKey = this._replaceQueryKey(key);
-            if (key !== deepKey) {
-              const newKey = deepPrefix + '_' + deepKey;
+            let [newKey, fieldConfig] = this._replaceQueryKey(key);
+
+            if (key !== newKey) {
+              newKey = deepPrefix + '_' + newKey;
 
               query[newKey] = value;
               delete query[key];
 
               const deepField = key.substring(0, key.lastIndexOf('.'));
               deepQueriedFields.add(deepField);
+            }
+
+            // JSON query
+            if (['array', 'object'].includes(fieldConfig?.type) && isObject(value)) {
+              delete query[newKey];
+
+              console.log('GI BUVOOOO');
+
+              const snakeCaseFieldKey = snakeCase(newKey);
+              let condition: string = '';
+              switch (fieldConfig.type) {
+                case 'array':
+                  const subCondition = mToPsql(
+                    `${snakeCaseFieldKey}_elem`,
+                    value,
+                    this._schemaArrayFields(fieldConfig?.items),
+                  );
+                  condition = `EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(${snakeCaseFieldKey}) AS ${snakeCaseFieldKey}_elem
+    WHERE ${subCondition}
+)`;
+                  break;
+
+                case 'object':
+                  condition = mToPsql(
+                    snakeCaseFieldKey,
+                    value,
+                    this._schemaArrayFields(fieldConfig),
+                  );
+                  break;
+              }
+
+              query.$raw = mergeRaw(
+                {
+                  condition,
+                  bindings: [],
+                },
+                query?.$raw,
+              );
             }
           }
 
