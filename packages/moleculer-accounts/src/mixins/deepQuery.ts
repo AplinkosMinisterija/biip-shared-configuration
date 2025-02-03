@@ -46,7 +46,6 @@ export type DeepQuery = {
   fields: string[];
   field: string;
   depth: number;
-  deeper: any;
   withQuery: any;
   getService: (serviceOrName: string | DeepService) => DeepService;
   serviceFields: (serviceOrName: string | DeepService) => Record<string, string>;
@@ -58,17 +57,24 @@ export function DeepQueryMixin() {
   const schema = {
     methods: {
       // RECURSIVE!!!
-      _joinField(params: DeepQuery) {
-        const { fields, deeper } = params;
+      _joinField(joinParms: DeepQuery) {
+        const { fields } = joinParms;
         const field = fields.shift();
         let { service, handler } = this._getDeepConfigByField(field);
 
         if (handler) {
-          handler(params);
+          handler(joinParms);
         }
 
-        if (service) {
-          deeper(service);
+        if (service && fields.length) {
+          joinParms.field = fields[0];
+          joinParms.tableName = joinParms.subTableName;
+          joinParms.subTableName = `${joinParms.subTableName}_${service._columnName(
+            joinParms.fields[0],
+          )}`;
+          joinParms.depth += 1;
+
+          service._joinField(joinParms);
         }
       },
 
@@ -323,21 +329,6 @@ export function DeepQueryMixin() {
               });
             };
 
-            joinParms.deeper = function (serviceOrName: string | any) {
-              if (joinParms.fields.length) {
-                const service = joinParms.getService(serviceOrName);
-
-                joinParms.field = fields[0];
-                joinParms.tableName = joinParms.subTableName;
-                joinParms.subTableName = `${joinParms.subTableName}_${service._columnName(
-                  joinParms.fields[0],
-                )}`;
-                joinParms.depth += 1;
-
-                service._joinField(joinParms);
-              }
-            };
-
             joinParms.getService = (serviceOrName: string | any) => {
               return typeof serviceOrName === 'string'
                 ? this.broker.getLocalService(serviceOrName)
@@ -366,6 +357,7 @@ export function DeepQueryMixin() {
 
             this._joinField(joinParms);
           }
+
           q.distinctOn('id').orderBy('id', 'asc');
 
           return qRoot;
