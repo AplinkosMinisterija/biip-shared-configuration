@@ -202,7 +202,7 @@ call tenants.find {"query":{"craetedBy.address":{"phone.countryCode":{"$in":["+3
 
 As said earlier, deeper structure description is required for arrays. This is because the mixin needs to know which properties are array type (in any depth).
 
-````js
+```js
 fields: {
   address: {
     type: 'object',
@@ -216,5 +216,8 @@ fields: {
     },
   },
 }
-```js
-````
+```
+
+```
+
+```
