@@ -62,7 +62,10 @@ export function DeepQueryMixin() {
         const field = fields.shift();
         let { service, handler } = this._getDeepConfigByField(field);
 
-        handler(params);
+        if (handler) {
+          handler(params);
+        }
+
         if (service) {
           deeper(service);
         }
