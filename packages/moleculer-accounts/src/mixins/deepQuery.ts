@@ -46,7 +46,7 @@ export type DeepQuery = {
   fields: string[];
   field: string;
   depth: number;
-  withQuery: any;
+  withQuery: (subQ: Knex, column1: string, column2: string) => void;
   getService: (serviceOrName: string | DeepService) => DeepService;
   serviceFields: (serviceOrName: string | DeepService) => Record<string, string>;
   serviceQuery: (serviceOrName: string | DeepService) => any;
