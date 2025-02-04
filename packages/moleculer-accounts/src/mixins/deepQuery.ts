@@ -110,7 +110,8 @@ export function DeepQueryMixin() {
           }
         }
 
-        return Object.keys(fields)[0];
+        const key = Object.keys(fields)[0];
+        return fields[key].columnName || key;
       },
 
       _isFieldDeep(field: string) {
@@ -365,7 +366,8 @@ export function DeepQueryMixin() {
             this._joinField(joinParms);
           }
 
-          q.distinctOn('id').orderBy('id', 'asc');
+          const idField = this._getPrimaryKeyColumnName();
+          q.distinctOn(idField).orderBy(idField, 'asc');
 
           return qRoot;
         },
