@@ -102,8 +102,16 @@ export function DeepQueryMixin() {
       },
 
       _getPrimaryKeyColumnName() {
-        // TODO: filter this.settings.fields by primaryKey: true; return key or columnName
-        return 'id';
+        const fields = this.settings.fields;
+
+        for (const key in fields) {
+          if (fields[key].primaryKey) {
+            return fields[key].columnName || key;
+          }
+        }
+
+        const key = Object.keys(fields)[0];
+        return fields[key].columnName || key;
       },
 
       _isFieldDeep(field: string) {
@@ -286,6 +294,11 @@ export function DeepQueryMixin() {
           params.query = query;
 
           const qRoot: any = createQuery.call(adapter, params, opts);
+
+          if (deepQueriedFields.size === 0) {
+            return qRoot;
+          }
+
           const q: any = qRoot.clone();
           qRoot.from(q.as('qDeep'));
 
@@ -358,7 +371,8 @@ export function DeepQueryMixin() {
             this._joinField(joinParms);
           }
 
-          q.distinctOn('id').orderBy('id', 'asc');
+          const idField = this._getPrimaryKeyColumnName();
+          q.distinctOn(idField).orderBy(idField, 'asc');
 
           return qRoot;
         },
