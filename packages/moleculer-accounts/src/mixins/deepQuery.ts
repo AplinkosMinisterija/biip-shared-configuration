@@ -102,8 +102,15 @@ export function DeepQueryMixin() {
       },
 
       _getPrimaryKeyColumnName() {
-        // TODO: filter this.settings.fields by primaryKey: true; return key or columnName
-        return 'id';
+        const fields = this.settings.fields;
+
+        for (const key in fields) {
+          if (fields[key].primaryKey) {
+            return fields[key].columnName || key;
+          }
+        }
+
+        return Object.keys(fields)[0];
       },
 
       _isFieldDeep(field: string) {
