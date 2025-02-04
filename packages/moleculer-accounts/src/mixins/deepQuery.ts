@@ -294,6 +294,11 @@ export function DeepQueryMixin() {
           params.query = query;
 
           const qRoot: any = createQuery.call(adapter, params, opts);
+
+          if (deepQueriedFields.size === 0) {
+            return qRoot;
+          }
+
           const q: any = qRoot.clone();
           qRoot.from(q.as('qDeep'));
 
