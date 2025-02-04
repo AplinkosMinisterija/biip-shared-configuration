@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.5.1
+
+### Patch Changes
+
+- 3ea2528: Fix hardcoded primary key
+
 ## 1.5.0
 
 ### Minor Changes
