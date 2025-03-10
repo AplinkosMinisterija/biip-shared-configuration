@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.6.0
+
+### Minor Changes
+
+- e89787c: Ability to deep sort
+
 ## 1.5.1
 
 ### Patch Changes
