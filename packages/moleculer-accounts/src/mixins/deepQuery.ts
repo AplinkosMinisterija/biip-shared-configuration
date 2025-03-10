@@ -234,11 +234,35 @@ export function DeepQueryMixin() {
 
           const deepQueriedFields = new Set<string>();
           const query = params?.query ? Object.assign({}, params.query) : {};
+          const sort: string[] = params?.sort ? [...params.sort] : [];
 
           /**
            * All deep query fields will be repleaced "." => "_"
            * query[subColumn.field] => query[subColumn_field]
            */
+
+          const parsedSort = sort.map((item) => {
+            const desc = item.startsWith('-'); // Check if it starts with '-'
+            const field = desc ? item.slice(1) : item; // Remove '-' if present
+            return { field, desc };
+          });
+
+          for (const key in parsedSort) {
+            const { field, desc } = parsedSort[key];
+            let [newField] = this._replaceQueryKey(field);
+
+            if (field !== newField) {
+              newField = deepPrefix + '_' + newField;
+
+              sort[key] = desc ? '-' + newField : newField;
+
+              const deepField = field.substring(0, field.lastIndexOf('.'));
+              deepQueriedFields.add(deepField);
+            }
+          }
+
+          params.sort = sort;
+
           for (const [key, value] of Object.entries(query)) {
             let [newKey, fieldConfig] = this._replaceQueryKey(key);
 
