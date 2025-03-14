@@ -170,7 +170,8 @@ export function DeepQueryMixin() {
 
         const [field, ...restOfKeyParts] = key.split('.');
         if (!this._isFieldDeep(field)) {
-          return [this._columnName(key), this.settings.fields[key]];
+          console.log('niu', [this._columnName(field), this.settings.fields[field]]);
+          return [key, this.settings.fields[field]];
         }
 
         const { service } = this._getDeepConfigByField(field);
@@ -233,6 +234,7 @@ export function DeepQueryMixin() {
           }
 
           const deepQueriedFields = new Set<string>();
+          const jsonSortFields = new Set<{ field: string; desc: boolean; config: any }>();
           const query = params?.query ? Object.assign({}, params.query) : {};
           const sort: string[] = params?.sort ? [...params.sort] : [];
 
@@ -249,7 +251,7 @@ export function DeepQueryMixin() {
 
           for (const key in parsedSort) {
             const { field, desc } = parsedSort[key];
-            let [newField] = this._replaceQueryKey(field);
+            let [newField, config] = this._replaceQueryKey(field);
 
             if (field !== newField) {
               newField = deepPrefix + '_' + newField;
@@ -258,6 +260,12 @@ export function DeepQueryMixin() {
 
               const deepField = field.substring(0, field.lastIndexOf('.'));
               deepQueriedFields.add(deepField);
+            }
+
+            if (newField.includes('.')) {
+              jsonSortFields.add({ field: newField, desc, config });
+              // TODO: better remove with splice on separate loop
+              delete sort[key];
             }
           }
 
@@ -319,7 +327,7 @@ export function DeepQueryMixin() {
 
           const qRoot: any = createQuery.call(adapter, params, opts);
 
-          if (deepQueriedFields.size === 0) {
+          if (deepQueriedFields.size === 0 && jsonSortFields.size === 0) {
             return qRoot;
           }
 
@@ -393,6 +401,26 @@ export function DeepQueryMixin() {
             };
 
             this._joinField(joinParms);
+          }
+
+          for (const { field, desc, config } of jsonSortFields) {
+            const foo = field
+              .split('.')
+              .map((f, i, a) => {
+                if (i === 0) {
+                  return f;
+                }
+                let ff = `'${f}'`;
+
+                if (i === a.length - 1) {
+                  return `>${ff}`;
+                }
+
+                return ff;
+              })
+              .join('->');
+            console.log(field, desc, config, foo);
+            qRoot.orderByRaw(`${foo} ${desc ? 'DESC' : 'ASC'}`);
           }
 
           const idField = this._getPrimaryKeyColumnName();
