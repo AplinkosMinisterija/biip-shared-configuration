@@ -410,23 +410,25 @@ export function DeepQueryMixin() {
           }
 
           for (const { field, desc, config } of jsonSortFields) {
-            const foo = field
+            const column = field
               .split('.')
-              .map((f, i, a) => {
-                if (i === 0) {
-                  return f;
-                }
-                let ff = `'${f}'`;
-
-                if (i === a.length - 1) {
-                  return `>${ff}`;
+              .map((field, index, fields) => {
+                if (index === 0) {
+                  return field;
                 }
 
-                return ff;
+                field = `'${field}'`;
+
+                // TODO: check config if type number
+                if (index === fields.length - 1) {
+                  field = `>${field}`;
+                }
+
+                return field;
               })
               .join('->');
-            console.log(field, desc, config, foo);
-            qRoot.orderByRaw(`${foo} ${desc ? 'DESC' : 'ASC'}`);
+
+            qRoot.orderByRaw(`${column} ${desc ? 'DESC' : 'ASC'}`);
           }
 
           const idField = this._getPrimaryKeyColumnName();
