@@ -245,8 +245,7 @@ export function DeepQueryMixin() {
 
           if (newField.includes('.')) {
             jsonSortFields.add({ field: newField, desc, config });
-            // TODO: better remove with splice on separate loop
-            delete sort[key];
+            sort.splice(Number(key), 1);
           }
         }
       },
