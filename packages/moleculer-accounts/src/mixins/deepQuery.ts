@@ -249,12 +249,18 @@ export function DeepQueryMixin() {
             delete sort[key];
           }
         }
-
-        return sort;
       },
 
       _parseQuery(query: any, deepPrefix: string, deepQueriedFields: Set<string>) {
         for (const [key, value] of Object.entries(query)) {
+          if (['$and', '$or', '$nor'].includes(key) && Array.isArray(value)) {
+            for (const q of value) {
+              this._parseQuery(q, deepPrefix, deepQueriedFields);
+            }
+
+            continue;
+          }
+
           let [newKey, fieldConfig] = this._replaceQueryKey(key);
 
           if (key !== newKey) {
@@ -301,8 +307,6 @@ export function DeepQueryMixin() {
             );
           }
         }
-
-        return query;
       },
     },
 
@@ -320,23 +324,14 @@ export function DeepQueryMixin() {
             return createQuery.call(adapter, params, opts);
           }
 
+          params.sort = params?.sort ? [...params.sort] : [];
+          params.query = params?.query ? Object.assign({}, params.query) : {};
+
           const deepQueriedFields = new Set<string>();
           const jsonSortFields = new Set<{ field: string; desc: boolean; config: any }>();
-          /**
-           * All deep query fields will be repleaced "." => "_"
-           * query[subColumn.field] => query[subColumn_field]
-           */
-          params.sort = this._parseSort(
-            params?.sort ? [...params.sort] : [],
-            deepPrefix,
-            deepQueriedFields,
-            jsonSortFields,
-          );
-          params.query = this._parseQuery(
-            params?.query ? Object.assign({}, params.query) : {},
-            deepPrefix,
-            deepQueriedFields,
-          );
+
+          this._parseSort(params.sort, deepPrefix, deepQueriedFields, jsonSortFields);
+          this._parseQuery(params.query, deepPrefix, deepQueriedFields);
 
           const qRoot: any = createQuery.call(adapter, params, opts);
 
