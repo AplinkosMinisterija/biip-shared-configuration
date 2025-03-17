@@ -197,7 +197,7 @@ export function DeepQueryMixin() {
 
         switch (fieldType) {
           case 'object': {
-            const properties = fieldSchema?.properties || {};
+            const properties = fieldSchema?.props || fieldSchema?.properties || {};
 
             for (const key in properties) {
               const subFieldSchema = properties[key];
