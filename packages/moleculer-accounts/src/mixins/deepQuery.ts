@@ -170,7 +170,6 @@ export function DeepQueryMixin() {
 
         const [field, ...restOfKeyParts] = key.split('.');
         if (!this._isFieldDeep(field)) {
-          console.log('niu', [this._columnName(field), this.settings.fields[field]]);
           return [key, this.settings.fields[field]];
         }
 
