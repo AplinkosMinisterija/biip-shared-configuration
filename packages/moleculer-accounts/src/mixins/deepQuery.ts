@@ -217,6 +217,93 @@ export function DeepQueryMixin() {
 
         return arrayFields;
       },
+
+      _parseSort(
+        sort: string[],
+        deepPrefix: string,
+        deepQueriedFields: Set<string>,
+        jsonSortFields: Set<{ field: string; desc: boolean; config: any }>,
+      ) {
+        const parsedSort = sort.map((item) => {
+          const desc = item.startsWith('-'); // Check if it starts with '-'
+          const field = desc ? item.slice(1) : item; // Remove '-' if present
+          return { field, desc };
+        });
+
+        for (const key in parsedSort) {
+          const { field, desc } = parsedSort[key];
+          let [newField, config] = this._replaceQueryKey(field);
+
+          if (field !== newField) {
+            newField = deepPrefix + '_' + newField;
+
+            sort[key] = desc ? '-' + newField : newField;
+
+            const deepField = field.substring(0, field.lastIndexOf('.'));
+            deepQueriedFields.add(deepField);
+          }
+
+          if (newField.includes('.')) {
+            jsonSortFields.add({ field: newField, desc, config });
+            // TODO: better remove with splice on separate loop
+            delete sort[key];
+          }
+        }
+
+        return sort;
+      },
+
+      _parseQuery(query: any, deepPrefix: string, deepQueriedFields: Set<string>) {
+        for (const [key, value] of Object.entries(query)) {
+          let [newKey, fieldConfig] = this._replaceQueryKey(key);
+
+          if (key !== newKey) {
+            newKey = deepPrefix + '_' + newKey;
+
+            query[newKey] = value;
+            delete query[key];
+
+            const deepField = key.substring(0, key.lastIndexOf('.'));
+            deepQueriedFields.add(deepField);
+          }
+
+          // JSON query
+          if (['array', 'object'].includes(fieldConfig?.type) && isObject(value)) {
+            delete query[newKey];
+
+            const snakeCaseFieldKey = snakeCase(newKey);
+            let condition: string = '';
+            switch (fieldConfig.type) {
+              case 'array':
+                const subCondition = mToPsql(
+                  `${snakeCaseFieldKey}_elem`,
+                  value,
+                  this._schemaArrayFields(fieldConfig?.items),
+                );
+                condition = `EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(${snakeCaseFieldKey}) AS ${snakeCaseFieldKey}_elem
+    WHERE ${subCondition}
+)`;
+                break;
+
+              case 'object':
+                condition = mToPsql(snakeCaseFieldKey, value, this._schemaArrayFields(fieldConfig));
+                break;
+            }
+
+            query.$raw = mergeRaw(
+              {
+                condition,
+                bindings: [],
+              },
+              query?.$raw,
+            );
+          }
+        }
+
+        return query;
+      },
     },
 
     async started() {
@@ -235,95 +322,21 @@ export function DeepQueryMixin() {
 
           const deepQueriedFields = new Set<string>();
           const jsonSortFields = new Set<{ field: string; desc: boolean; config: any }>();
-          const query = params?.query ? Object.assign({}, params.query) : {};
-          const sort: string[] = params?.sort ? [...params.sort] : [];
-
           /**
            * All deep query fields will be repleaced "." => "_"
            * query[subColumn.field] => query[subColumn_field]
            */
-
-          const parsedSort = sort.map((item) => {
-            const desc = item.startsWith('-'); // Check if it starts with '-'
-            const field = desc ? item.slice(1) : item; // Remove '-' if present
-            return { field, desc };
-          });
-
-          for (const key in parsedSort) {
-            const { field, desc } = parsedSort[key];
-            let [newField, config] = this._replaceQueryKey(field);
-
-            if (field !== newField) {
-              newField = deepPrefix + '_' + newField;
-
-              sort[key] = desc ? '-' + newField : newField;
-
-              const deepField = field.substring(0, field.lastIndexOf('.'));
-              deepQueriedFields.add(deepField);
-            }
-
-            if (newField.includes('.')) {
-              jsonSortFields.add({ field: newField, desc, config });
-              // TODO: better remove with splice on separate loop
-              delete sort[key];
-            }
-          }
-
-          params.sort = sort;
-
-          for (const [key, value] of Object.entries(query)) {
-            let [newKey, fieldConfig] = this._replaceQueryKey(key);
-
-            if (key !== newKey) {
-              newKey = deepPrefix + '_' + newKey;
-
-              query[newKey] = value;
-              delete query[key];
-
-              const deepField = key.substring(0, key.lastIndexOf('.'));
-              deepQueriedFields.add(deepField);
-            }
-
-            // JSON query
-            if (['array', 'object'].includes(fieldConfig?.type) && isObject(value)) {
-              delete query[newKey];
-
-              const snakeCaseFieldKey = snakeCase(newKey);
-              let condition: string = '';
-              switch (fieldConfig.type) {
-                case 'array':
-                  const subCondition = mToPsql(
-                    `${snakeCaseFieldKey}_elem`,
-                    value,
-                    this._schemaArrayFields(fieldConfig?.items),
-                  );
-                  condition = `EXISTS (
-    SELECT 1
-    FROM jsonb_array_elements(${snakeCaseFieldKey}) AS ${snakeCaseFieldKey}_elem
-    WHERE ${subCondition}
-)`;
-                  break;
-
-                case 'object':
-                  condition = mToPsql(
-                    snakeCaseFieldKey,
-                    value,
-                    this._schemaArrayFields(fieldConfig),
-                  );
-                  break;
-              }
-
-              query.$raw = mergeRaw(
-                {
-                  condition,
-                  bindings: [],
-                },
-                query?.$raw,
-              );
-            }
-          }
-
-          params.query = query;
+          params.sort = this._parseSort(
+            params?.sort ? [...params.sort] : [],
+            deepPrefix,
+            deepQueriedFields,
+            jsonSortFields,
+          );
+          params.query = this._parseQuery(
+            params?.query ? Object.assign({}, params.query) : {},
+            deepPrefix,
+            deepQueriedFields,
+          );
 
           const qRoot: any = createQuery.call(adapter, params, opts);
 
