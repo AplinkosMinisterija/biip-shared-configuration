@@ -199,7 +199,7 @@ export function DeepQueryMixin() {
             const properties = fieldSchema?.props || fieldSchema?.properties || {};
 
             for (const key in properties) {
-              const subFieldSchema = properties[key];
+              const subFieldSchema = properties?.[key];
               const subParents = [...parents, key];
               const subArrayFields = this._schemaArrayFields(subFieldSchema, subParents);
 
@@ -410,6 +410,8 @@ export function DeepQueryMixin() {
           }
 
           for (const { field, desc, config } of jsonSortFields) {
+            let fieldSchema = config;
+
             const column = field
               .split('.')
               .map((field, index, fields) => {
@@ -417,11 +419,17 @@ export function DeepQueryMixin() {
                   return field;
                 }
 
+                const properties = fieldSchema?.props || fieldSchema?.properties || {};
+                fieldSchema = properties?.[field];
+
                 field = `'${field}'`;
 
-                // TODO: check config if type number
                 if (index === fields.length - 1) {
-                  field = `>${field}`;
+                  const fieldType =
+                    typeof fieldSchema === 'string' ? fieldSchema : fieldSchema?.type || 'string';
+                  if (fieldType !== 'number') {
+                    field = `>${field}`;
+                  }
                 }
 
                 return field;
