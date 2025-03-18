@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.7.0
+
+### Minor Changes
+
+- 67491ac: Sort by jsonb properties
+
 ## 1.6.0
 
 ### Minor Changes
