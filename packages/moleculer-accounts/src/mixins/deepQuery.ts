@@ -170,7 +170,7 @@ export function DeepQueryMixin() {
 
         const [field, ...restOfKeyParts] = key.split('.');
         if (!this._isFieldDeep(field)) {
-          return [this._columnName(key), this.settings.fields[key]];
+          return [key, this.settings.fields[field]];
         }
 
         const { service } = this._getDeepConfigByField(field);
@@ -196,10 +196,10 @@ export function DeepQueryMixin() {
 
         switch (fieldType) {
           case 'object': {
-            const properties = fieldSchema?.properties || {};
+            const properties = fieldSchema?.props || fieldSchema?.properties || {};
 
             for (const key in properties) {
-              const subFieldSchema = properties[key];
+              const subFieldSchema = properties?.[key];
               const subParents = [...parents, key];
               const subArrayFields = this._schemaArrayFields(subFieldSchema, subParents);
 
@@ -215,6 +215,96 @@ export function DeepQueryMixin() {
         }
 
         return arrayFields;
+      },
+
+      _parseSort(
+        sort: string[],
+        deepPrefix: string,
+        deepQueriedFields: Set<string>,
+        jsonSortFields: Set<{ field: string; desc: boolean; config: any }>,
+      ) {
+        const parsedSort = sort.map((item) => {
+          const desc = item.startsWith('-'); // Check if it starts with '-'
+          const field = desc ? item.slice(1) : item; // Remove '-' if present
+          return { field, desc };
+        });
+
+        for (const key in parsedSort) {
+          const { field, desc } = parsedSort[key];
+          let [newField, config] = this._replaceQueryKey(field);
+
+          if (field !== newField) {
+            newField = deepPrefix + '_' + newField;
+
+            sort[key] = desc ? '-' + newField : newField;
+
+            const deepField = field.substring(0, field.lastIndexOf('.'));
+            deepQueriedFields.add(deepField);
+          }
+
+          if (newField.includes('.')) {
+            jsonSortFields.add({ field: newField, desc, config });
+            sort.splice(Number(key), 1);
+          }
+        }
+      },
+
+      _parseQuery(query: any, deepPrefix: string, deepQueriedFields: Set<string>) {
+        for (const [key, value] of Object.entries(query)) {
+          if (['$and', '$or', '$nor'].includes(key) && Array.isArray(value)) {
+            for (const q of value) {
+              this._parseQuery(q, deepPrefix, deepQueriedFields);
+            }
+
+            continue;
+          }
+
+          let [newKey, fieldConfig] = this._replaceQueryKey(key);
+
+          if (key !== newKey) {
+            newKey = deepPrefix + '_' + newKey;
+
+            query[newKey] = value;
+            delete query[key];
+
+            const deepField = key.substring(0, key.lastIndexOf('.'));
+            deepQueriedFields.add(deepField);
+          }
+
+          // JSON query
+          if (['array', 'object'].includes(fieldConfig?.type) && isObject(value)) {
+            delete query[newKey];
+
+            const snakeCaseFieldKey = snakeCase(newKey);
+            let condition: string = '';
+            switch (fieldConfig.type) {
+              case 'array':
+                const subCondition = mToPsql(
+                  `${snakeCaseFieldKey}_elem`,
+                  value,
+                  this._schemaArrayFields(fieldConfig?.items),
+                );
+                condition = `EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(${snakeCaseFieldKey}) AS ${snakeCaseFieldKey}_elem
+    WHERE ${subCondition}
+)`;
+                break;
+
+              case 'object':
+                condition = mToPsql(snakeCaseFieldKey, value, this._schemaArrayFields(fieldConfig));
+                break;
+            }
+
+            query.$raw = mergeRaw(
+              {
+                condition,
+                bindings: [],
+              },
+              query?.$raw,
+            );
+          }
+        }
       },
     },
 
@@ -232,94 +322,18 @@ export function DeepQueryMixin() {
             return createQuery.call(adapter, params, opts);
           }
 
+          params.sort = params?.sort ? [...params.sort] : [];
+          params.query = params?.query ? Object.assign({}, params.query) : {};
+
           const deepQueriedFields = new Set<string>();
-          const query = params?.query ? Object.assign({}, params.query) : {};
-          const sort: string[] = params?.sort ? [...params.sort] : [];
+          const jsonSortFields = new Set<{ field: string; desc: boolean; config: any }>();
 
-          /**
-           * All deep query fields will be repleaced "." => "_"
-           * query[subColumn.field] => query[subColumn_field]
-           */
-
-          const parsedSort = sort.map((item) => {
-            const desc = item.startsWith('-'); // Check if it starts with '-'
-            const field = desc ? item.slice(1) : item; // Remove '-' if present
-            return { field, desc };
-          });
-
-          for (const key in parsedSort) {
-            const { field, desc } = parsedSort[key];
-            let [newField] = this._replaceQueryKey(field);
-
-            if (field !== newField) {
-              newField = deepPrefix + '_' + newField;
-
-              sort[key] = desc ? '-' + newField : newField;
-
-              const deepField = field.substring(0, field.lastIndexOf('.'));
-              deepQueriedFields.add(deepField);
-            }
-          }
-
-          params.sort = sort;
-
-          for (const [key, value] of Object.entries(query)) {
-            let [newKey, fieldConfig] = this._replaceQueryKey(key);
-
-            if (key !== newKey) {
-              newKey = deepPrefix + '_' + newKey;
-
-              query[newKey] = value;
-              delete query[key];
-
-              const deepField = key.substring(0, key.lastIndexOf('.'));
-              deepQueriedFields.add(deepField);
-            }
-
-            // JSON query
-            if (['array', 'object'].includes(fieldConfig?.type) && isObject(value)) {
-              delete query[newKey];
-
-              const snakeCaseFieldKey = snakeCase(newKey);
-              let condition: string = '';
-              switch (fieldConfig.type) {
-                case 'array':
-                  const subCondition = mToPsql(
-                    `${snakeCaseFieldKey}_elem`,
-                    value,
-                    this._schemaArrayFields(fieldConfig?.items),
-                  );
-                  condition = `EXISTS (
-    SELECT 1
-    FROM jsonb_array_elements(${snakeCaseFieldKey}) AS ${snakeCaseFieldKey}_elem
-    WHERE ${subCondition}
-)`;
-                  break;
-
-                case 'object':
-                  condition = mToPsql(
-                    snakeCaseFieldKey,
-                    value,
-                    this._schemaArrayFields(fieldConfig),
-                  );
-                  break;
-              }
-
-              query.$raw = mergeRaw(
-                {
-                  condition,
-                  bindings: [],
-                },
-                query?.$raw,
-              );
-            }
-          }
-
-          params.query = query;
+          this._parseSort(params.sort, deepPrefix, deepQueriedFields, jsonSortFields);
+          this._parseQuery(params.query, deepPrefix, deepQueriedFields);
 
           const qRoot: any = createQuery.call(adapter, params, opts);
 
-          if (deepQueriedFields.size === 0) {
+          if (deepQueriedFields.size === 0 && jsonSortFields.size === 0) {
             return qRoot;
           }
 
@@ -393,6 +407,36 @@ export function DeepQueryMixin() {
             };
 
             this._joinField(joinParms);
+          }
+
+          for (const { field, desc, config } of jsonSortFields) {
+            let fieldSchema = config;
+
+            const column = field
+              .split('.')
+              .map((field, index, fields) => {
+                if (index === 0) {
+                  return field;
+                }
+
+                const properties = fieldSchema?.props || fieldSchema?.properties || {};
+                fieldSchema = properties?.[field];
+
+                field = `'${field}'`;
+
+                if (index === fields.length - 1) {
+                  const fieldType =
+                    typeof fieldSchema === 'string' ? fieldSchema : fieldSchema?.type || 'string';
+                  if (fieldType !== 'number') {
+                    field = `>${field}`;
+                  }
+                }
+
+                return field;
+              })
+              .join('->');
+
+            qRoot.orderByRaw(`${column} ${desc ? 'DESC' : 'ASC'}`);
           }
 
           const idField = this._getPrimaryKeyColumnName();
