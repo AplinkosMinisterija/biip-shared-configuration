@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.8.0
+
+### Minor Changes
+
+- 098389f: Boundaries service implementation
+
 ## 1.7.1
 
 ### Patch Changes
