@@ -1,5 +1,11 @@
 # @aplinkosministerija/moleculer-accounts
 
+## 1.7.1
+
+### Patch Changes
+
+- d8a339d: Bug fix sorting
+
 ## 1.7.0
 
 ### Minor Changes
