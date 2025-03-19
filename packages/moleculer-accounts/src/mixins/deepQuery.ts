@@ -253,9 +253,9 @@ export function DeepQueryMixin() {
 
         if (jsonSort) {
           sort.splice(0, sort.length);
+        } else {
+          jsonSortFields.clear();
         }
-
-        console.log(sort, jsonSort, jsonSortFields);
       },
 
       _parseQuery(query: any, deepPrefix: string, deepQueriedFields: Set<string>) {
