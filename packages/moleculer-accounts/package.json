@@ -19,7 +19,8 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "dev": "ts-node src/index.ts",
-    "prepare": "yarn build"
+    "prepare": "yarn build",
+    "openapi-ts:boundaries": "openapi-ts -f openapi-ts.boundaries.config.ts"
   },
   "bugs": {
     "url": "https://github.com/AplinkosMinisterija/biip-shared-configuration/issues"
@@ -35,6 +36,8 @@
     "node": "*"
   },
   "dependencies": {
+    "@hey-api/client-fetch": "^0.8.3",
+    "@hey-api/openapi-ts": "^0.64.13",
     "@moleculer/database": "github:ambrazasp/moleculerjs-database",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
