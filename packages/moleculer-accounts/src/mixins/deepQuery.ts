@@ -229,6 +229,8 @@ export function DeepQueryMixin() {
           return { field, desc };
         });
 
+        let jsonSort = false;
+
         for (const key in parsedSort) {
           const { field, desc } = parsedSort[key];
           let [newField, config] = this._replaceQueryKey(field);
@@ -242,10 +244,17 @@ export function DeepQueryMixin() {
             deepQueriedFields.add(deepField);
           }
 
+          jsonSortFields.add({ field: newField, desc, config });
+
           if (newField.includes('.')) {
-            jsonSortFields.add({ field: newField, desc, config });
-            sort.splice(Number(key), 1);
+            jsonSort = true;
           }
+        }
+
+        if (jsonSort) {
+          sort.splice(0, sort.length);
+        } else {
+          jsonSortFields.clear();
         }
       },
 
@@ -409,34 +418,36 @@ export function DeepQueryMixin() {
             this._joinField(joinParms);
           }
 
-          for (const { field, desc, config } of jsonSortFields) {
-            let fieldSchema = config;
+          if (!opts.counting && jsonSortFields.size > 0) {
+            for (const { field, desc, config } of jsonSortFields) {
+              let fieldSchema = config;
 
-            const column = field
-              .split('.')
-              .map((field, index, fields) => {
-                if (index === 0) {
-                  return field;
-                }
-
-                const properties = fieldSchema?.props || fieldSchema?.properties || {};
-                fieldSchema = properties?.[field];
-
-                field = `'${field}'`;
-
-                if (index === fields.length - 1) {
-                  const fieldType =
-                    typeof fieldSchema === 'string' ? fieldSchema : fieldSchema?.type || 'string';
-                  if (fieldType !== 'number') {
-                    field = `>${field}`;
+              const column = field
+                .split('.')
+                .map((field, index, fields) => {
+                  if (index === 0) {
+                    return field;
                   }
-                }
 
-                return field;
-              })
-              .join('->');
+                  const properties = fieldSchema?.props || fieldSchema?.properties || {};
+                  fieldSchema = properties?.[field];
 
-            qRoot.orderByRaw(`${column} ${desc ? 'DESC' : 'ASC'}`);
+                  field = `'${field}'`;
+
+                  if (index === fields.length - 1) {
+                    const fieldType =
+                      typeof fieldSchema === 'string' ? fieldSchema : fieldSchema?.type || 'string';
+                    if (fieldType !== 'number') {
+                      field = `>${field}`;
+                    }
+                  }
+
+                  return field;
+                })
+                .join('->');
+
+              qRoot.orderByRaw(`${column} ${desc ? 'DESC' : 'ASC'}`);
+            }
           }
 
           const idField = this._getPrimaryKeyColumnName();
