@@ -1,6 +1,6 @@
 {
   "name": "@aplinkosministerija/moleculer-accounts",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Wrapper around biip-auth-api for managing users & tenants",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
