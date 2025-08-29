@@ -6,7 +6,7 @@ on:
       version:
         description: 'Postgres version'
         required: true
-        default: 16
+        default: 17
         type: string
 
 permissions: { }

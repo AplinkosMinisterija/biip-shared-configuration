@@ -1,5 +1,5 @@
 # specify version
-ARG POSTGRES_VERSION=16
+ARG POSTGRES_VERSION=17
 
 FROM postgis/postgis:${POSTGRES_VERSION}-3.5
 
