@@ -4,7 +4,7 @@ ARG POSTGRES_VERSION=17
 FROM postgis/postgis:${POSTGRES_VERSION}-3.5
 
 # specify version
-ENV POSTGRES_VERSION=16
+ENV POSTGRES_VERSION=17
 
 RUN apt-get update \
     && apt-get install -y git \
