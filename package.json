@@ -17,5 +17,8 @@
   "license": "MIT",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "resolutions": {
+    "moleculer-postgis": "github:AplinkosMinisterija/moleculer-postgis#v0.4.0"
+  }
 }
