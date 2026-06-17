@@ -14,7 +14,7 @@ permissions: { }
 jobs:
   publish-caddy-docker:
     name: Publish Caddy docker image
-    runs-on: ubuntu-latest
+    runs-on: am-github-runner
     timeout-minutes: 15
     permissions:
       contents: read

@@ -14,7 +14,7 @@ permissions: { }
 jobs:
   publish-postgres-docker:
     name: Publish Postgres docker image
-    runs-on: ubuntu-latest
+    runs-on: am-github-runner
     timeout-minutes: 15
     permissions:
       contents: read
